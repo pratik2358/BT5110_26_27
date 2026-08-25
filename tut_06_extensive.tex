@@ -1,0 +1,463 @@
+\documentclass{beamer}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[english]{babel}
+\usepackage{hyperref}
+\usepackage{outlines}
+\usepackage{graphicx}
+\usepackage{algorithm}
+\usepackage{algorithmic}
+\usepackage{amsmath,amssymb}
+\usepackage{moresize}
+\usepackage{tikz}
+\usetikzlibrary{overlay-beamer-styles}
+\usepackage{microtype}
+\usepackage[
+  backend=biber,
+  style=alphabetic,
+]{biblatex}
+\usepackage{latexsym,multicol,booktabs,calligra}
+\usepackage{listings,stackengine}
+\usepackage[table,dvipsnames]{xcolor}
+\usepackage{cancel}
+\renewcommand{\figurename}{Figure}
+\renewcommand{\algorithmname}{Algorithm}
+
+\usepackage{SHU}
+\setbeamersize{text margin left=7mm, text margin right=7mm}
+\def\cmd#1{\texttt{\color{red}\footnotesize $\backslash$#1}}
+\def\env#1{\texttt{\color{blue}\footnotesize #1}}
+\definecolor{deepblue}{rgb}{0,0,0.5}
+\definecolor{deepred}{rgb}{0.6,0,0}
+\definecolor{deepgreen}{rgb}{0,0.5,0}
+\definecolor{halfgray}{gray}{0.55}
+\definecolor{nus-orange}{RGB}{239,124,0}
+\definecolor{nus-white}{RGB}{255,255,255}
+\definecolor{nus-blue}{RGB}{0,61,124}
+\definecolor{nus-black}{RGB}{0,0,0}
+
+\newcommand\vscore{\mathsf{VScore}}
+\newcommand\Fontvi{\fontsize{6}{7.2}\selectfont}
+\newcommand{\ZZ}{\mathbb{Z}}
+\newcommand{\NN}{\mathbb{N}}
+\renewcommand{\leq}{\leqslant}
+\renewcommand{\geq}{\geqslant}
+
+% --- Listings: safe, wrapped, compact option available ---
+\lstset{
+  language=SQL,
+  basicstyle=\ttfamily\footnotesize,
+  keywordstyle=\bfseries\color{nus-blue},
+  emphstyle=\ttfamily\color{nus-blue},
+  stringstyle=\color{deepgreen},
+  numbers=left,
+  numberstyle=\small\color{halfgray},
+  rulesepcolor=\color{nus-orange},
+  frame=shadowbox,
+  showstringspaces=false,
+  breaklines=true,
+  breakatwhitespace=true,
+  keepspaces=true,
+  columns=flexible,
+  upquote=true
+}
+\lstdefinestyle{sqlcompact}{
+  language=SQL,
+  basicstyle=\ttfamily\scriptsize,
+  keywordstyle=\bfseries\color{nus-blue},
+  stringstyle=\color{deepgreen},
+  numbers=left,
+  numberstyle=\scriptsize\color{halfgray},
+  frame=shadowbox,
+  showstringspaces=false,
+  breaklines=true,
+  breakatwhitespace=true,
+  keepspaces=true,
+  columns=flexible,
+  upquote=true
+}
+
+\author{\href{https://pratik2358.github.io/}{Pratik Karmakar}}
+\title{BT5110: Tutorial 6 — Simple Queries}
+\institute{
+  School of Computing,\\
+  National University of Singapore
+}
+\date{AY25/26 S1}
+
+\begin{document}
+\begin{frame}
+  \titlepage
+  \begin{figure}[htpb]
+    \begin{center}
+      \includegraphics[keepaspectratio, scale=0.18]{nus-logo.png}
+    \end{center}
+  \end{figure}
+\end{frame}
+
+\section{Setup}
+\begin{frame}{Scenario}
+\small
+Students at the \textbf{National University of Ngendipura (NUN)} buy, lend, and borrow books.\\
+NUNStA commissions \emph{Apasaja Private Limited} to implement an online book exchange that records:
+\begin{itemize}\itemsep3pt
+  \item Student info: name, faculty, department, \textbf{email} (identifier), join date (\texttt{year}).
+  \item Book info: title, authors, publisher, year, edition, \textbf{ISBN10}, \textbf{ISBN13} (industry IDs; \emph{unique}).
+  \item Loans: \texttt{borrowed} date, \texttt{returned} date (may be \texttt{NULL}).
+\end{itemize}
+Auditing keeps data for (i) copies with loans and (ii) graduated students with loaned books. \\
+This tutorial uses the schema/data created in “Creating and Populating Tables”.
+\end{frame}
+
+\begin{frame}{Important Constraints for This Tutorial}
+\Large
+\begin{block}{Use \emph{simple queries only}}
+No \textbf{nested} or \textbf{aggregate} queries in answers. \\
+Focus on \textbf{single-table} and \textbf{multi-table} joins and set operators.
+\end{block}
+\normalsize
+We’ll present \textbf{equivalent} formulations (e.g., CROSS JOIN vs INNER JOIN, \texttt{UNION/INTERSECT/EXCEPT}) and discuss readability best practices.
+\end{frame}
+
+\section{Questions}
+\begin{frame}{Questions — Single-table}
+\footnotesize
+\textbf{1.\ Single-Table Queries}
+\begin{enumerate}\itemsep2pt
+  \item[(a)] Print the different departments.
+  \item[(b)] Print the different departments in which students are enrolled.
+  \item[(c)] For each copy that has been borrowed and returned, print the \texttt{ISBN13} and the loan \textbf{duration}. Order by \texttt{ISBN13} (ASC) then duration (DESC). Use a \textbf{single} table.
+\end{enumerate}
+\end{frame}
+
+\begin{frame}{Questions — Multi-table}
+\footnotesize
+\textbf{2.\ Multi-Table Queries}
+\begin{enumerate}\itemsep2pt
+  \item[(a)] For each unreturned loan of a book published by \texttt{'Wiley'}, print: book title, owner name+faculty, borrower name+faculty.
+  \item[(b)] Print emails of students who \emph{borrowed or lent} a copy \textbf{before} they joined the University.
+  \item[(c)] Print emails of students who \emph{borrowed or lent} a copy \textbf{on the day} they joined.
+  \item[(d)] Print emails of students who \emph{borrowed and lent} a copy \textbf{on the day} they joined.
+  \item[(e)] Print emails of students who \emph{borrowed but did not lend} a copy \textbf{on the day} they joined.
+  \item[(f)] Print \texttt{ISBN13} of books that have \textbf{never} been borrowed.
+\end{enumerate}
+\end{frame}
+
+\section{Solutions}
+
+% 1(a)
+\begin{frame}[fragile]{1(a).\ Different departments (single table)}
+\small
+\textbf{SQL}
+\begin{lstlisting}
+SELECT d.department
+FROM department AS d;
+\end{lstlisting}
+
+\medskip
+\textbf{Relational Algebra}
+\[
+\pi_{\text{department}}(\ \texttt{department}\ )
+\]
+\textit{Note:} RA projection is set-based (duplicates removed), matching the PK property here.
+\end{frame}
+
+% 1(b)
+\begin{frame}[fragile]{1(b).\ Departments with enrolled students}
+\small
+\textbf{SQL}
+\begin{lstlisting}
+SELECT DISTINCT s.department
+FROM student AS s;
+\end{lstlisting}
+
+\medskip
+\textbf{Relational Algebra}
+\[
+\pi_{\text{department}}(\ \texttt{student}\ )
+\]
+\textit{Set semantics already imply DISTINCT.}
+\end{frame}
+
+% 1(c) returned only
+\begin{frame}[fragile]{1(c).\ Loan duration from a single table (returned only)}
+\small
+\textbf{SQL}
+\begin{lstlisting}[style=sqlcompact]
+SELECT l.book, l.returned - l.borrowed + 1 AS duration
+FROM loan AS l
+WHERE l.returned IS NOT NULL
+ORDER BY l.book ASC, duration DESC;
+\end{lstlisting}
+
+\medskip
+\textbf{Relational Algebra (extended projection)}
+\[
+\pi_{\text{book},\ \text{duration}:=\text{returned}-\text{borrowed}+1}\Big(
+  \ \sigma_{\text{returned}\neq \text{NULL}}(\ \texttt{loan}\ )\ \Big)
+\]
+\textit{Ordering is not part of classical RA.}
+\end{frame}
+
+% 1(c) including unreturned
+\begin{frame}[fragile]{1(c).\ Loan duration including unreturned}
+\small\itshape SQL (COALESCE)
+\begin{lstlisting}[style=sqlcompact]
+SELECT l.book,
+       (COALESCE(l.returned, CURRENT_DATE)
+        - l.borrowed + 1) AS duration
+FROM loan AS l
+ORDER BY l.book ASC, duration DESC;
+\end{lstlisting}
+
+\small\itshape SQL (CASE)
+\begin{lstlisting}[style=sqlcompact]
+SELECT l.book,
+       ((CASE WHEN l.returned IS NULL
+              THEN CURRENT_DATE
+              ELSE l.returned END)
+        - l.borrowed + 1) AS duration
+FROM loan AS l
+ORDER BY l.book ASC, duration DESC;
+\end{lstlisting}
+
+\medskip
+\textbf{Relational Algebra (with NVL/IF as built-ins)}
+\[
+\pi_{\text{book},\ \text{duration}:=\mathrm{NVL}(\text{returned},\mathrm{CURRENT\_DATE})-\text{borrowed}+1}(\ \texttt{loan}\ )
+\]
+\end{frame}
+
+% 2(a) with COPY
+\begin{frame}[fragile]{2(a).\ Unreturned Wiley loans (with COPY join)}
+\small
+\textbf{SQL}
+\begin{lstlisting}[style=sqlcompact]
+SELECT b.title,
+       s1.name AS ownerName,  d1.faculty AS ownerFaculty,
+       s2.name AS borrowerName, d2.faculty AS borrowerFaculty
+FROM loan AS l, book AS b, copy AS c,
+     student AS s1, student AS s2,
+     department AS d1, department AS d2
+WHERE l.book = b.ISBN13
+  AND c.book = l.book AND c.copy = l.copy AND c.owner = l.owner
+  AND l.owner = s1.email AND l.borrower = s2.email
+  AND s1.department = d1.department AND s2.department = d2.department
+  AND b.publisher = 'Wiley'
+  AND l.returned IS NULL;
+\end{lstlisting}
+\end{frame}
+
+% \begin{frame}[fragile]{2(a).\ Unreturned Wiley loans (with COPY join)}
+% \small
+% \textbf{Relational Algebra}
+% $
+% &\pi_{\substack{\text{title},\ \text{ownerName}:=s1.\text{name},\\
+%                 \text{ownerFaculty}:=d1.\text{faculty},\
+%                 \text{borrowerName}:=s2.\text{name},\
+%                 \text{borrowerFaculty}:=d2.\text{faculty}}}
+% \ \sigma_{\substack{b.\text{publisher}='Wiley'\\ \wedge\ l.\text{returned}=\text{NULL}}}
+% \Big(
+%   &(((\ \texttt{loan}\ l\ \bowtie_{l.\text{book}=b.\text{ISBN13}}\ \texttt{book}\ b)
+%      \ \bowtie_{\substack{c.\text{book}=l.\text{book}\ \wedge\\ c.\text{copy}=l.\text{copy}\ \wedge\\ c.\text{owner}=l.\text{owner}}}\ \texttt{copy}\ c)\\
+%   &\bowtie_{l.\text{owner}=s1.\text{email}}\ \texttt{student}\ s1
+%    \ \bowtie_{s1.\text{department}=d1.\text{department}}\ \texttt{department}\ d1\\
+%   &\bowtie_{l.\text{borrower}=s2.\text{email}}\ \texttt{student}\ s2
+%    \ \bowtie_{s2.\text{department}=d2.\text{department}}\ \texttt{department}\ d2
+% \Big)
+% $
+% \end{frame}
+
+% 2(a) omit COPY
+\begin{frame}[fragile]{2(a).\ Unreturned Wiley loans (omit COPY via PK–FK)}
+\small
+\textbf{SQL}
+\begin{lstlisting}[style=sqlcompact]
+SELECT b.title,
+       s1.name AS ownerName,  d1.faculty AS ownerFaculty,
+       s2.name AS borrowerName, d2.faculty AS borrowerFaculty
+FROM loan AS l, book AS b,
+     student AS s1, student AS s2,
+     department AS d1, department AS d2
+WHERE l.book = b.ISBN13
+  AND l.owner = s1.email  AND l.borrower = s2.email
+  AND s1.department = d1.department AND s2.department = d2.department
+  AND b.publisher = 'Wiley' AND l.returned IS NULL;
+\end{lstlisting}
+
+% \small
+% \textbf{Relational Algebra}
+% \[
+% \begin{aligned}
+% \pi_{\text{title},\ \ldots}\ \sigma_{\substack{b.\text{publisher}='Wiley'\\ \wedge\ l.\text{returned}=\text{NULL}}}
+% \Big(
+%  (\texttt{loan}\ l \bowtie_{l.\text{book}=b.\text{ISBN13}} \texttt{book}\ b)
+%  \bowtie_{l.\text{owner}=s1.\text{email}} \texttt{student}\ s1
+%  \bowtie_{s1.\text{department}=d1.\text{department}} \texttt{department}\ d1\\
+%  \bowtie_{l.\text{borrower}=s2.\text{email}} \texttt{student}\ s2
+%  \bowtie_{s2.\text{department}=d2.\text{department}} \texttt{department}\ d2
+% \Big)
+% \end{aligned}
+% \]
+\end{frame}
+
+% 2(a) INNER JOIN variant
+\begin{frame}[fragile]{2(a).\ Using \texttt{INNER JOIN} (clear ON vs WHERE)}
+\small
+\textbf{SQL}
+\begin{lstlisting}[style=sqlcompact]
+SELECT b.title,
+       s1.name AS ownerName,    d1.faculty AS ownerFaculty,
+       s2.name AS borrowerName, d2.faculty AS borrowerFaculty
+FROM loan AS l
+INNER JOIN book       AS b  ON l.book     = b.ISBN13
+INNER JOIN student    AS s1 ON l.owner    = s1.email
+INNER JOIN student    AS s2 ON l.borrower = s2.email
+INNER JOIN department AS d1 ON s1.department = d1.department
+INNER JOIN department AS d2 ON s2.department = d2.department
+WHERE b.publisher = 'Wiley' AND l.returned IS NULL;
+\end{lstlisting}
+
+% \small
+% \textbf{Relational Algebra}
+% \[
+% \pi_{\text{title},\ \ldots}\ \sigma_{\substack{b.\text{publisher}='Wiley'\\ \wedge\ l.\text{returned}=\text{NULL}}}
+% \Big(
+%   ((((\texttt{loan}\ l \bowtie \texttt{book}\ b)
+%       \bowtie \texttt{student}\ s1)\bowtie \texttt{student}\ s2)
+%       \bowtie \texttt{department}\ d1)\bowtie \texttt{department}\ d2
+% \Big)
+% \]
+\end{frame}
+
+% 2(b)
+\begin{frame}[fragile]{2(b).\ Borrowed or lent \emph{before} joining}
+\small
+\textbf{SQL}
+\begin{lstlisting}
+SELECT DISTINCT s.email
+FROM loan AS l, student AS s
+WHERE (s.email = l.borrower OR s.email = l.owner)
+  AND l.borrowed < s.year;
+\end{lstlisting}
+
+\small
+\textbf{Relational Algebra (union of roles)}
+\[
+\begin{aligned}
+&\pi_{s.\text{email}}\ \sigma_{l.\text{borrowed}<s.\text{year}}\ (\,\texttt{loan}\ l\ \bowtie_{l.\text{borrower}=s.\text{email}}\ \texttt{student}\ s\,)\\
+\cup\ &\pi_{s.\text{email}}\ \sigma_{l.\text{borrowed}<s.\text{year}}\ (\,\texttt{loan}\ l\ \bowtie_{l.\text{owner}=s.\text{email}}\ \texttt{student}\ s\,)
+\end{aligned}
+\]
+\end{frame}
+
+% 2(c)
+\begin{frame}[fragile]{2(c).\ Borrowed or lent \emph{on} joining day}
+\small
+\textbf{SQL}
+\begin{lstlisting}
+SELECT DISTINCT s.email
+FROM loan AS l, student AS s
+WHERE (s.email = l.borrower OR s.email = l.owner)
+  AND l.borrowed = s.year;
+\end{lstlisting}
+
+\small
+\textbf{Relational Algebra (union)}
+\[
+\begin{aligned}
+&\pi_{s.\text{email}}\ \sigma_{l.\text{borrowed}=s.\text{year}}\ (\,\texttt{loan}\ l\ \bowtie_{l.\text{borrower}=s.\text{email}}\ \texttt{student}\ s\,)\\
+\cup\ &\pi_{s.\text{email}}\ \sigma_{l.\text{borrowed}=s.\text{year}}\ (\,\texttt{loan}\ l\ \bowtie_{l.\text{owner}=s.\text{email}}\ \texttt{student}\ s\,)
+\end{aligned}
+\]
+\end{frame}
+
+% 2(d)
+\begin{frame}[fragile]{2(d).\ Borrowed \emph{and} lent \emph{on} joining day}
+\small
+\textbf{SQL (INTERSECT)}
+\begin{lstlisting}
+SELECT s.email
+FROM loan AS l, student AS s
+WHERE s.email = l.borrower AND l.borrowed = s.year
+INTERSECT
+SELECT s.email
+FROM loan AS l, student AS s
+WHERE s.email = l.owner AND l.borrowed = s.year;
+\end{lstlisting}
+
+\small
+\textbf{Relational Algebra (intersection)}
+\[
+\begin{aligned}
+&\pi_{s.\text{email}}\ \sigma_{l.\text{borrowed}=s.\text{year}}\ (\,\texttt{loan}\ l\ \bowtie_{l.\text{borrower}=s.\text{email}}\ \texttt{student}\ s\,)\\
+\cap\ &\pi_{s.\text{email}}\ \sigma_{l.\text{borrowed}=s.\text{year}}\ (\,\texttt{loan}\ l\ \bowtie_{l.\text{owner}=s.\text{email}}\ \texttt{student}\ s\,)
+\end{aligned}
+\]
+\end{frame}
+
+% 2(e)
+\begin{frame}[fragile]{2(e).\ Borrowed \emph{but did not lend} \emph{on} joining day}
+\small
+\textbf{SQL (EXCEPT)}
+\begin{lstlisting}
+SELECT s.email
+FROM loan AS l, student AS s
+WHERE s.email = l.borrower AND l.borrowed = s.year
+EXCEPT
+SELECT s.email
+FROM loan AS l, student AS s
+WHERE s.email = l.owner AND l.borrowed = s.year;
+\end{lstlisting}
+
+\small
+\textbf{Relational Algebra (set difference)}
+\[
+\begin{aligned}
+&\pi_{s.\text{email}}\ \sigma_{l.\text{borrowed}=s.\text{year}}\ (\,\texttt{loan}\ l\ \bowtie_{l.\text{borrower}=s.\text{email}}\ \texttt{student}\ s\,)\\
+-\ &\pi_{s.\text{email}}\ \sigma_{l.\text{borrowed}=s.\text{year}}\ (\,\texttt{loan}\ l\ \bowtie_{l.\text{owner}=s.\text{email}}\ \texttt{student}\ s\,)
+\end{aligned}
+\]
+\end{frame}
+
+% 2(f)
+\begin{frame}[fragile]{2(f).\ Books \emph{never} borrowed}
+\small
+\textbf{SQL}
+\begin{lstlisting}
+SELECT b.ISBN13
+FROM book AS b
+EXCEPT
+SELECT l.book
+FROM loan AS l;
+\end{lstlisting}
+
+\small
+\textbf{Relational Algebra (set difference)}
+\[
+\pi_{\text{ISBN13}}(\ \texttt{book}\ )\ -\ \pi_{\text{book}}(\ \texttt{loan}\ )
+\]
+\medskip
+\textbf{Alternative (outer join + IS NULL)} is not part of classical RA.
+\end{frame}
+
+\section{Guidelines}
+\begin{frame}{Guidelines \& Marking Tips}
+\small
+\begin{itemize}\itemsep4pt
+  \item \textbf{No hardcoding.} Queries must work on any dataset consistent with the schema.
+  \item \textbf{Constants only if stated.} If the question names a constant (e.g., 'Wiley'), you may use it; otherwise avoid.
+  \item \textbf{Readable style.} Use table aliases, qualify columns, and uppercase SQL keywords.
+  \item \textbf{Set operators} (\texttt{UNION/INTERSECT/EXCEPT}) inherently deduplicate; \texttt{DISTINCT} is redundant with them.
+  \item \textbf{Partial marks:} (i) query executes, (ii) correct columns (names, types, order), (iii) minimal row differences.
+\end{itemize}
+\end{frame}
+
+\begin{frame}
+\begin{center}
+Questions?\\
+Drop a mail at: pratik.karmakar@u.nus.edu
+\end{center}
+\end{frame}
+
+\end{document}

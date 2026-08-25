@@ -1,0 +1,22 @@
+# LaTeX build artifacts
+*.aux
+*.log
+*.nav
+*.out
+*.snm
+*.toc
+*.vrb
+*.fls
+*.fdb_latexmk
+*.synctex.gz
+*.bbl
+*.blg
+*.bcf
+*.run.xml
+
+# Build output at repo root -- the published copy that the
+# website serves lives in docs/slides/, committed on purpose.
+/tut_*.pdf
+
+# macOS
+.DS_Store

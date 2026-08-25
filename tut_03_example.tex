@@ -1,0 +1,107 @@
+\section{Identifying Functional Dependencies}
+\begin{frame}{Identifying Functional Dependencies}
+\small
+\begin{center}
+    Example Relation,  $R = \{A,B,C\} \text{ and } \Sigma =\{\{A\} \rightarrow \{B\}, \{B\} \rightarrow \{C\}$\}
+\end{center}
+\tiny
+The column in \alert{red} decides the color of the row: \textcolor{blue}{The rows having same values in the \alert{red} column, have same color}.\\
+\textbf{Task:} Check which other columns are following \textcolor{blue}{``same value if same color"} for each deciding (\alert{red}) column. The columns for which this holds, are implied by the \alert{red} column.
+\footnotesize
+\begin{columns}
+    \begin{column}{0.32\textwidth}
+        \begin{table}[t]
+\centering
+\begin{tabular}{ccc}
+\toprule
+\textbf{\alert{A}} & \textbf{B} & \textbf{C} \\
+\toprule
+\rowcolor{Dandelion}
+a1 & b1 & c1 \\
+\rowcolor{Dandelion}
+a1 & b1 & c1 \\
+\rowcolor{lightgray}
+a2 & b2 & c2 \\
+\rowcolor{lightgray}
+a2 & b2 & c2 \\
+\rowcolor{Thistle}
+a3 & b3 & c2 \\
+\rowcolor{Thistle}
+a3 & b3 & c2 \\
+\rowcolor{YellowGreen}
+a4 & b1 & c1 \\
+\rowcolor{YellowGreen}
+a4 & b1 & c1 \\
+a5 & b2 & c2 \\
+\bottomrule
+\end{tabular}\\
+\pause
+\{\alert{A}\} \rightarrow \{A,B,C\}
+\end{table}
+    \end{column}
+    \pause
+    \begin{column}{0.32\textwidth}
+        \begin{table}[t]
+\centering
+\begin{tabular}{ccc}
+\toprule
+\textbf{A} & \textbf{\alert{B}} & \textbf{C} \\
+\toprule
+\rowcolor{Dandelion}
+a1 & b1 & c1 \\
+\rowcolor{Dandelion}
+a1 & b1 & c1 \\
+\rowcolor{lightgray}
+a2 & b2 & c2 \\
+\rowcolor{lightgray}
+a2 & b2 & c2 \\
+\rowcolor{Thistle}
+a3 & b3 & c2 \\
+\rowcolor{Thistle}
+a3 & b3 & c2 \\
+\rowcolor{Dandelion}
+a4 & b1 & c1 \\
+\rowcolor{Dandelion}
+a4 & b1 & c1 \\
+\rowcolor{lightgray}
+a5 & b2 & c2 \\
+\bottomrule
+\end{tabular}\\
+\pause
+\{\alert{B}\} \rightarrow \{B,C\}
+\end{table}
+    \end{column}
+    \pause
+    \begin{column}{0.32\textwidth}
+        \begin{table}[t]
+\centering
+\begin{tabular}{ccc}
+\toprule
+\textbf{A} & \textbf{B} & \textbf{\alert{C}} \\
+\toprule
+\rowcolor{Dandelion}
+a1 & b1 & c1 \\
+\rowcolor{Dandelion}
+a1 & b1 & c1 \\
+\rowcolor{lightgray}
+a2 & b2 & c2 \\
+\rowcolor{lightgray}
+a2 & b2 & c2 \\
+\rowcolor{lightgray}
+a3 & b3 & c2 \\
+\rowcolor{lightgray}
+a3 & b3 & c2 \\
+\rowcolor{Dandelion}
+a4 & b1 & c1 \\
+\rowcolor{Dandelion}
+a4 & b1 & c1 \\
+\rowcolor{lightgray}
+a5 & b2 & c2 \\
+\bottomrule
+\end{tabular}\\
+\pause
+\{\alert{C}\} \rightarrow \{C\}
+\end{table}
+    \end{column}
+\end{columns}
+\end{frame}

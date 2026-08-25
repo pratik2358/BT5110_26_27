@@ -1,0 +1,259 @@
+\documentclass{beamer}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[english]{babel}
+\usepackage{hyperref}
+\usepackage{outlines}
+\usepackage{graphicx}
+\usepackage{algorithm}
+\usepackage{algorithmic}
+\usepackage{amsmath,amssymb}
+\usepackage{moresize}
+\usepackage{tikz}
+\usetikzlibrary{overlay-beamer-styles}
+\usepackage{microtype}
+\usepackage[
+  backend=biber,
+  style=alphabetic,
+]{biblatex}
+\usepackage{latexsym,multicol,booktabs,calligra}
+\usepackage{listings,stackengine}
+\usepackage[table,dvipsnames]{xcolor}
+\usepackage{cancel}
+\renewcommand{\figurename}{Figure}
+\renewcommand{\algorithmname}{Algorithm}
+
+\usepackage{SHU}
+\setbeamersize{text margin left=7mm, text margin right=7mm}
+\definecolor{deepblue}{rgb}{0,0,0.5}
+\definecolor{deepred}{rgb}{0.6,0,0}
+\definecolor{deepgreen}{rgb}{0,0.5,0}
+\definecolor{halfgray}{gray}{0.55}
+\definecolor{nus-orange}{RGB}{239,124,0}
+\definecolor{nus-blue}{RGB}{0,61,124}
+
+\lstset{
+  language=SQL,
+  basicstyle=\ttfamily\tiny,
+  keywordstyle=\bfseries\color{nus-blue},
+  emphstyle=\ttfamily\color{nus-blue},
+  stringstyle=\color{deepgreen},
+  numbers=left,
+  numberstyle=\small\color{halfgray},
+  rulesepcolor=\color{nus-orange},
+  frame=shadowbox,
+  showstringspaces=false,
+  breaklines=true,
+  breakatwhitespace=true,
+  keepspaces=true,
+  columns=flexible,
+  upquote=true
+}
+
+\author{\href{https://pratik2358.github.io/}{Pratik Karmakar}}
+\title{BT5110: Tutorial 8 — Stored Procedures and Triggers}
+\institute{
+  School of Computing,\\
+  National University of Singapore
+}
+\date{AY25/26 S1}
+
+\begin{document}
+
+\begin{frame}
+  \titlepage
+  \begin{figure}[htpb]
+    \begin{center}
+      \includegraphics[keepaspectratio, scale=0.18]{nus-logo.png}
+    \end{center}
+  \end{figure}
+\end{frame}
+
+\section{Setup}
+\begin{frame}{Scenario}
+\small
+Students at the \textbf{National University of Ngendipura (NUN)} buy, lend, and borrow books.\\
+NUNStA commissions \emph{Apasaja Private Limited} to implement an online book exchange system that records:
+\begin{itemize}\itemsep3pt
+  \item Students: name, faculty, department, \textbf{email}, join year.
+  \item Books: title, authors, publisher, edition, \textbf{ISBN10}, \textbf{ISBN13}.
+  \item Loans: \texttt{borrowed} date, \texttt{returned} date (\texttt{NULL} if active).
+\end{itemize}
+Auditing preserves records of graduated students and copies with loans.\\
+This tutorial uses the schema/data from “Creating and Populating Tables.”
+\end{frame}
+
+\section{Questions}
+\begin{frame}{Questions}
+\footnotesize
+\begin{enumerate}
+  \item Stored Functions and Procedures
+  \begin{itemize}
+    \item[(a)] Implement \texttt{borrow\_book} (function/procedure) to check availability of a copy, insert a loan, and return/raise a message.
+    \item Scenario: Adeline Wong (\texttt{awong007@msn.com}) tries to borrow 3 copies of “Applied Calculus” (\texttt{ISBN13=978-0470170526}).
+  \end{itemize}
+  \item Triggers
+  \begin{itemize}
+    \item[(a)] Create a trigger that enforces: a student may have at most 3 active loans (local strategy).
+    \item[(b)] Create a trigger that ensures globally no student exceeds 3 active loans (global strategy).
+  \end{itemize}
+\end{enumerate}
+\end{frame}
+
+\section{Stored Procedures}
+\begin{frame}[fragile]{1(a).\ Function \texttt{borrow\_book}}
+\vspace{-0.3em}
+\begin{columns}[t,onlytextwidth]
+  \column{0.49\textwidth}
+\begin{lstlisting}[numbers=none]
+CREATE OR REPLACE FUNCTION borrow_book (
+  borrower_email VARCHAR(256),
+  isbn13 CHAR(14),
+  borrow_date DATE
+) RETURNS TEXT AS $$
+DECLARE
+  available_copy RECORD;
+BEGIN
+  SELECT * INTO available_copy
+  FROM copy c
+  WHERE c.book = isbn13
+    AND NOT EXISTS (
+      SELECT 1 FROM loan l
+      WHERE l.book=c.book
+        AND l.copy=c.copy
+        AND l.owner=c.owner
+        AND l.returned IS NULL)
+  LIMIT 1;
+\end{lstlisting}
+
+  \column{0.49\textwidth}
+\begin{lstlisting}[numbers=none]
+  IF NOT FOUND THEN
+    RETURN 'No available copies of '||isbn13;
+  ELSE
+    INSERT INTO loan (borrower, owner, book, copy, borrowed)
+    VALUES (borrower_email, available_copy.owner,
+            available_copy.book, available_copy.copy, borrow_date);
+    RETURN 'Book '||isbn13||' borrowed by '||borrower_email;
+  END IF;
+END;
+$$ LANGUAGE plpgsql;
+\end{lstlisting}
+\end{columns}
+\end{frame}
+
+\begin{frame}[fragile]{1(a).\ Procedure \texttt{borrow\_book}}
+\vspace{-0.3em}
+\begin{columns}[t,onlytextwidth]
+  \column{0.49\textwidth}
+\begin{lstlisting}[numbers=none]
+CREATE OR REPLACE PROCEDURE borrow_book (
+  borrower_email VARCHAR(256),
+  isbn13 CHAR(14),
+  borrow_date DATE
+) AS $$
+DECLARE
+  available_copy RECORD;
+BEGIN
+  SELECT * INTO available_copy
+  FROM copy c
+  WHERE c.book = isbn13
+    AND NOT EXISTS (
+      SELECT 1 FROM loan l
+      WHERE l.book=c.book
+        AND l.copy=c.copy
+        AND l.owner=c.owner
+        AND l.returned ISNULL)
+  LIMIT 1;
+\end{lstlisting}
+
+  \column{0.49\textwidth}
+\begin{lstlisting}[numbers=none]
+  IF NOT FOUND THEN
+    RAISE NOTICE 'No copies of %', isbn13;
+  ELSE
+    INSERT INTO loan (borrower, owner, book, copy, borrowed)
+    VALUES (borrower_email, available_copy.owner,
+            available_copy.book, available_copy.copy, borrow_date);
+    RAISE NOTICE 'Book % borrowed by %', isbn13, borrower_email;
+  END IF;
+END;
+$$ LANGUAGE plpgsql;
+\end{lstlisting}
+\end{columns}
+\end{frame}
+
+\section{Triggers}
+\begin{frame}[fragile]{2(a).\ Local Loan Limit Trigger}
+\textbf{Max 3 active loans per student.}
+\begin{lstlisting}
+CREATE OR REPLACE FUNCTION check_local_loan_limit()
+RETURNS TRIGGER AS $$
+DECLARE active_loan_count INT;
+BEGIN
+  SELECT COUNT(*) INTO active_loan_count
+  FROM loan l
+  WHERE l.borrower = NEW.borrower
+    AND l.returned ISNULL;
+
+  IF active_loan_count >= 3 THEN
+    RETURN NULL; -- prevent insert
+  ELSE
+    RETURN NEW;
+  END IF;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER enforce_local_loan_limit_insert
+BEFORE INSERT ON loan
+FOR EACH ROW EXECUTE FUNCTION check_local_loan_limit();
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]{2(b).\ Global Loan Limit Trigger}
+\textbf{Ensure no student exceeds 3 active loans.}
+\begin{lstlisting}
+CREATE OR REPLACE FUNCTION check_global_loan_limit()
+RETURNS TRIGGER AS $$
+DECLARE violating_student RECORD;
+BEGIN
+  SELECT l.borrower INTO violating_student
+  FROM loan l
+  WHERE l.returned ISNULL
+  GROUP BY l.borrower
+  HAVING COUNT(*) > 3;
+
+  IF violating_student IS NOT NULL THEN
+    RAISE EXCEPTION '% exceeds loan limit', violating_student;
+  ELSE
+    RETURN NEW;
+  END IF;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER enforce_global_loan_limit
+AFTER INSERT OR UPDATE ON loan
+FOR EACH ROW EXECUTE FUNCTION check_global_loan_limit();
+\end{lstlisting}
+\end{frame}
+
+\section{Guidelines}
+\begin{frame}{Guidelines \& Remarks}
+\small
+\begin{itemize}\itemsep4pt
+  \item Functions return a value; procedures raise notices or exceptions.
+  \item Local vs Global strategies: local checks per row; global checks across all rows.
+  \item Use \textbf{BEFORE} triggers with \texttt{RETURN NULL} to cancel insertions.
+  \item Use \textbf{AFTER} triggers with \texttt{RAISE EXCEPTION} for global consistency.
+  \item Dropping schema (\texttt{DROP SCHEMA ... CASCADE}) ensures removal of triggers/functions.
+\end{itemize}
+\end{frame}
+
+\begin{frame}
+\begin{center}
+Questions?\\
+Drop a mail at: pratik.karmakar@u.nus.edu
+\end{center}
+\end{frame}
+
+\end{document}

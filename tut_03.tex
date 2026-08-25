@@ -1,0 +1,314 @@
+\documentclass{beamer}
+\usepackage[T1]{fontenc}
+\usepackage[english]{babel}
+\usepackage{lmodern}
+\usepackage{amsmath,amssymb}
+\usepackage{algorithm}
+\usepackage{algorithmic}
+\usepackage{graphicx}
+\usepackage{subcaption}
+\usepackage{caption}
+\usepackage{tikz}
+\usetikzlibrary{overlay-beamer-styles}
+\usepackage{booktabs,multicol,stackengine}
+\usepackage[table,dvipsnames]{xcolor}
+\usepackage{cancel}
+\usepackage{moresize}
+
+\usepackage{hyperref}
+
+\usepackage{listings}
+\definecolor{nus-orange}{RGB}{239,124,0}
+\definecolor{nus-blue}{RGB}{0,61,124}
+\definecolor{halfgray}{gray}{0.55}
+
+\lstset{
+  basicstyle=\ttfamily\footnotesize
+  keywordstyle=\bfseries\color{nus-blue},
+  stringstyle=\color{ForestGreen},
+  numbers=left,
+  numberstyle=\scriptsize\color{halfgray},
+  rulesepcolor=\color{nus-orange},
+  frame=shadowbox,
+  columns=flexible,
+  showstringspaces=false,
+  keepspaces=true,
+  tabsize=2,
+  breaklines=true
+}
+
+\renewcommand{\figurename}{Figure}
+\renewcommand{\algorithmname}{Algorithm}
+
+\usepackage{SHU}
+\input{macros}
+
+\title{BT5110: Tutorial 3 — Functional Dependencies}
+\author{\href{https://pratik2358.github.io/}{Pratik Karmakar}}
+\institute{School of Computing,\\ National University of Singapore}
+\date{AY25/26 S1}
+
+\begin{document}
+\begin{frame}
+  \titlepage
+  \IfFileExists{nus-logo.png}{
+    \begin{figure}[htpb]\centering
+      \includegraphics[keepaspectratio, scale=0.18]{nus-logo.png}
+    \end{figure}
+  }{}
+\end{frame}
+\include{tut_03_example}
+
+\section{Armstrong's Axioms}
+\begin{frame}{Rules for Functional Dependencies (Armstrong's Axioms)}
+\scriptsize
+$W, X, Y, Z$ mentioned here are \alert{sets} of attributes.\\
+\textbf{Sound \& complete inference system}
+\begin{itemize}\setlength\itemsep{0.25em}
+  \item \textbf{Reflexivity}:\; If $Y\subseteq X$, then $X \to Y$.
+  \item \textbf{Augmentation}:\; If $X \to Y$, then $X\cup Z \to Y\cup Z$ for any $Z$.
+  \item \textbf{Transitivity}:\; If $X \to Y$ and $Y \to Z$, then $X \to Z$.
+\end{itemize}
+
+\medskip
+\textbf{Common derived rules} (from the three above)
+\begin{itemize}\setlength\itemsep{0.25em}
+  \item \textbf{Union / Additivity}:\; If $X \to Y$ and $X \to Z$, then $X \to Y\cup Z$.
+  \item \textbf{Decomposition / Projectivity}:\; If $X \to Y\cup Z$, then $X \to Y$ and $X \to Z$.
+  \item \textbf{Pseudotransitivity}:\; If $X \to Y$ and $W\cup Y \to Z$, then $W\cup X \to Z$.
+  \item \textbf{Composition}:\; If $X \to Y$ and $Z \to W$, then $X\cup Z \to Y\cup W$.
+  \item \textbf{Self-determination}:\; $X \to X$.
+\end{itemize}
+
+\medskip
+\textbf{How we use them here}
+\begin{itemize}\setlength\itemsep{0.25em}
+  \item \emph{LHS reduction}: test if $X\setminus\{A\}\to Y$ holds via closure using the axioms.
+  \item \emph{Redundancy removal}: test if an FD $X\to Y$ is implied by the rest (i.e., $Y\subseteq X^+$ computed from the others).
+\end{itemize}
+\end{frame}
+
+\section{Solutions}
+
+\begin{frame}[fragile]{Question 1.a.}
+\tiny
+Your company, Apasaja Private Limited, is commissioned by \emph{Toko Kopi Luwak} to design the relational schema for coffee beans, drinks, and cafes. We are given
+\[
+R=\{A,B,C,D,E,F,G,H\},\\
+\Sigma=\{\{A\} \to \{C,E\},\{A,B\} \to \{D\},\{F\} \to \{H\},\{C,E\} \to \{A\},\{B,C,E\} \to \{D\},\{A,B,F\} \to \{D,G\},\{B,C,E,F\} \to \{G\}\}.
+\]
+
+\pause
+\footnotesize
+\vspace{0.5em}
+\begin{columns}
+\begin{column}{0.48\textwidth}
+\vspace{0.5em}
+\textbf{Attribute mapping}\\[-0.2em]
+\begin{tabular}{@{}ll@{}}
+\toprule
+\textbf{Symbol} & \textbf{Meaning} \\
+\midrule
+A & \texttt{name} (bean brand) \\
+B & \texttt{dname} (drink name) \\
+C & \texttt{cultivar} \\
+D & \texttt{price} \\
+\bottomrule
+\end{tabular}
+\end{column}
+\pause
+\begin{column}{0.48\textwidth}
+\textbf{Attribute mapping}\\[-0.2em]
+\begin{tabular}{@{}ll@{}}
+\toprule
+\textbf{Symbol} & \textbf{Meaning} \\
+\midrule
+E & \texttt{region} \\
+F & \texttt{bname} (branch) \\
+G & \texttt{qty} (quantity sold) \\
+H & \texttt{address} \\
+\bottomrule
+\end{tabular}
+\end{column}
+\end{columns}
+
+\medskip
+\scriptsize
+\textcolor{teal}{Notes: A bean is identified by \alert{name} or by \alert{(cultivar, region)}; a drink name is unique \emph{per bean}; branches sell drinks, with address and quantity recorded.}
+\end{frame}
+
+\begin{frame}{Question 1.b. \; Candidate keys via closures}
+\scriptsize
+$\Sigma=\{\{A\} \to \{C,E\},\{A,B\} \to \{D\},\{F\} \to \{H\},\{C,E\} \to \{A\},\{B,C,E\} \to \{D\},\{A,B,F\} \to \{D,G\},\{B,C,E,F\} \to \{G\}\}$.\\
+\textbf{Observation:} Since \alert{$B$} and \alert{$F$} never appear on the RHS of any FD, \alert{every key must contain $B$ and $F$}. We enumerate closures starting from supersets of $\{B,F\}$.
+
+\pause
+\tiny
+\vspace{0.3cm}
+\begin{columns}
+\begin{column}{0.32\textwidth}
+\textbf{Size 2}\\
+$\{B,F\}^+ = \{B,F,H\}$ \; (not a key)
+
+\medskip
+\textbf{Size 3 (supersets of $\{B,F\}$)}\\
+$\alert{\{A,B,F\}^+ = \{A,B,C,D,E,F,G,H\}}$ \\
+$\{B,C,F\}^+ = \{B,C,F,H\}$ \\
+$\{B,D,F\}^+ = \{B,D,F,H\}$ \\
+$\{B,E,F\}^+ = \{B,E,F,H\}$ \\
+$\{B,F,G\}^+ = \{B,F,G,H\}$ \\
+$\{B,F,H\}^+ = \{B,F,H\}$
+\end{column}
+\pause
+\begin{column}{0.34\textwidth}
+\textbf{Size 4 (not containing $\{A,B,F\}$)}\\
+$\{B,C,D,F\}^+ = \{B,C,D,F,H\}$ \\
+$\alert{\{B,C,E,F\}^+ = \{A,B,C,D,E,F,G,H\}}$ \\
+$\{B,C,F,G\}^+ = \{B,C,F,G,H\}$ \\
+$\{B,C,F,H\}^+ = \{B,C,F,H\}$ \\
+$\{B,D,E,F\}^+ = \{B,D,E,F,H\}$ \\
+$\{B,D,F,G\}^+ = \{B,D,F,G,H\}$ \\
+$\{B,D,F,H\}^+ = \{B,D,F,H\}$ \\
+$\{B,E,F,G\}^+ = \{B,E,F,G,H\}$ \\
+$\{B,E,F,H\}^+ = \{B,E,F,H\}$ \\
+$\{B,F,G,H\}^+ = \{B,F,G,H\}$
+\end{column}
+\pause
+\begin{column}{0.34\textwidth}
+\textbf{Larger supersets} (that are not supersets of keys above)\\
+All such closures remain proper subsets of $R$.
+
+\medskip
+\textbf{Conclusion}\\
+\alert{Candidate keys: $\{A,B,F\}$ and $\{B,C,E,F\}$.}
+\end{column}
+\end{columns}
+
+\medskip
+\scriptsize
+\begin{center}
+    Tedious by hand?\\
+I made your life a bit easier: \href{https://github.com/pratik2358/fucntional_dep}{\textcolor{blue}{Here}}
+\end{center}
+\end{frame}
+
+\begin{frame}{Question 1.c. \; Prime attributes}
+\small
+Keys are \alert{$\{A,B,F\}$} and \alert{$\{B,C,E,F\}$}. Prime attributes are those that appear in at least one key.
+
+\medskip
+\[
+\text{Prime attributes} \;=\; \{A,B,F\}\cup\{B,C,E,F\} \;=\; \alert{\{A,B,C,E,F\}}.
+\]
+\end{frame}
+
+\begin{frame}[fragile]{Question 2.a. \; Minimal cover of $R$ with $\Sigma$}
+\tiny
+\begin{columns}
+\begin{column}{0.30\textwidth}
+\textbf{Start from $\Sigma$:}\\
+\(
+\{A\} \to \{C,E\},\\
+\{A,B\} \to \{D\},\\
+\{F\} \to \{H\},\\
+\{C,E\} \to \{A\},\\
+\{B,C,E\} \to \{D\},\\
+\{A,B,F\} \to \{D,G\},\\
+\{B,C,E,F\} \to \{G\}.
+\)
+\end{column}
+
+\pause
+\begin{column}{0.30\textwidth}
+\textcolor{teal}{Step 1: Split RHS}\\
+\(
+\{A\} \to \{C\},\\
+\{A\} \to \{E\},\\
+\{A,B\} \to \{D\},\\
+\{F\} \to \{H\},\\
+\{C,E\} \to \{A\},\\
+\{B,C,E\} \to \{D\},\\
+\{A,B,F\} \to \{D\},\\
+\{A,B,F\} \to \{G\},\\
+\{B,C,E,F\} \to \{G\}.
+\)
+\end{column}
+\pause
+\begin{column}{0.40\textwidth}
+\textcolor{blue}{Step 2: Reduce LHS where possible}\\
+\(
+\{A\} \to \{C\},\\
+\{A\} \to \{E\},\\
+\{A,B\} \to \{D\},\\
+\{F\} \to \{H\},\\
+\{C,E\} \to \{A\},\\
+\{B,C,E\} \to \{D\},\\
+\{A,B,\cancel{F}\} \to \{D\}\text{ because } \{A,B\} \to \{D\}\\
+\{A,B,F\} \to \{G\},\\
+\{B,C,E,F\} \to \{G\}.
+\)
+\end{column}
+\end{columns}
+\end{frame}
+
+\begin{frame}[fragile]{Question 2.a. \; Minimal cover of $R$ with $\Sigma$}
+\begin{columns}
+    \begin{column}{0.5\textwidth}
+        \textcolor{teal}{Step 3: Remove redundancies}\\
+        \(
+\{A\} \to \{C\},\\
+\{A\} \to \{E\},\\
+\cancel{\textcolor{gray}{\{A,B\} \to \{D\}}}\tiny\text{ Already exists (repetition)},\\
+\normalsize
+\{F\} \to \{H\},\\
+\{C,E\} \to \{A\},\\
+\{B,C,E\} \to \{D\},\\
+\cancel{\textcolor{gray}{\{A,B\} \to \{D\}}}\tiny\text{ because }\{A\}\to\{C,E\} \text{ and } \{B,C,E\}\to\{D\},\\
+\normalsize
+\cancel{\textcolor{gray}{\{A,B,F\} \to \{G\}}}\tiny\text{ because }\{A\}\to\{C,E\} \text{ and } \{B,C,E,F\}\to\{G\},\\
+\normalsize
+\{B,C,E,F\} \to \{G\}.
+\)
+    \end{column}
+    \begin{column}{0.5\textwidth}
+        \textcolor{red}{Canonical Cover}\\
+\(
+\{A\} \to \{C\},\\
+\{A\} \to \{E\},\\ 
+\{F\} \to \{H\},\\ 
+\{C,E\} \to \{A\},\\
+\{B,C,E\} \to \{D\},\\ 
+\{B,C,E,F\} \to \{G\} .
+\)
+    \end{column}
+\end{columns}
+\medskip
+\scriptsize
+\pause
+(Alternative canonical covers exist, e.g., replace $\{B,C,E\} \to \{D\}$ by $\{A,B\} \to \{D\}$ and $\{B,C,E,F\} \to \{G\}$ by $\{A,B,F\} \to \{G\}$.) \hfill
+\end{frame}
+
+\begin{frame}[fragile]{Question 2.b. \; Compact Minimal Cover (merged by LHS)}
+\small
+One Compact Minimal Cover (grouping by identical LHS) is:\\
+\(
+\{A\} \to \{C,E\},\\ 
+\{F\} \to \{H\},\\ 
+\{C,E\} \to \{A\},\\ 
+\{B,C,E\} \to \{D\},\\ 
+\{B,C,E,F\} \to \{G\}
+\)
+
+\medskip
+\scriptsize
+\pause
+Other minimal covers are possible depending on which equivalent canonical cover you merge.
+\end{frame}
+
+\begin{frame}
+\begin{center}
+Questions?\\
+Drop a mail at: pratik.karmakar@u.nus.edu
+\end{center}
+\end{frame}
+\end{document}

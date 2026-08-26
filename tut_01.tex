@@ -76,7 +76,7 @@
 \textbf{Students} table
 \begin{itemize}
   \item One row per student
-  \item Columns: \texttt{email}, \texttt{name}, \texttt{faculty}, \texttt{department}, \texttt{join}
+  \item Columns: \texttt{email}, \texttt{name}, \texttt{faculty}, \texttt{department}, \texttt{joined}
   \item \textbf{Primary key} (\texttt{email}) uniquely identifies a student
 \end{itemize}
 \medskip
@@ -216,7 +216,7 @@ Your company, Apasaja Private Limited, is commissioned by NUN Students Associati
 
 The database stores:
 \begin{itemize}
-  \item \textbf{Students}: name, faculty, department, \texttt{join} date, graduation date. Identifier: \texttt{email}.
+  \item \textbf{Students}: name, faculty, department, \texttt{joined} date, graduation date. Identifier: \texttt{email}.
   \item \textbf{Books}: title, format, pages, language, authors, publisher, publication date, \texttt{ISBN-10}, \texttt{ISBN-13}.
   \item \textbf{Loans}: per-copy borrow and return dates.
 \end{itemize}
@@ -309,9 +309,9 @@ Your database is now ready\footnote{You need to be in the same directory of thes
 \textbf{(f)} Examples and the business rule each enforces:
 \begin{itemize}
   \item \textbf{UNIQUE} \texttt{book.ISBN10} — no two book records may share the same ISBN-10.
-  \item \textbf{NOT NULL} \texttt{student.name, join, faculty, department} — required student information cannot be missing.
+  \item \textbf{NOT NULL} \texttt{student.name, joined, faculty, department} — required student information cannot be missing.
   \item \textbf{CHECK} \texttt{book.format = 'paperback' OR 'hardcover'} — only permitted book formats are stored.
-  \item \textbf{CHECK} \texttt{student.graduate >= join} — a graduation date cannot be before the student joined.
+  \item \textbf{CHECK} \texttt{student.graduate >= joined} — a graduation date cannot be before the student joined.
   \item \textbf{CHECK} \texttt{copy.copy > 0} — copy numbers must be positive.
   \item \textbf{CHECK} \texttt{loan.returned >= borrowed} — a return date cannot be before the borrowing date.
 \end{itemize}
@@ -373,7 +373,7 @@ INSERT INTO book VALUES (
 \begin{frame}[fragile]{Q2. Insert Students}
 \textbf{(d)} Insert a new student by explicitly naming the target columns. What value is stored in any omitted column?
 \begin{lstlisting}[language=SQL]
-INSERT INTO student (email, name, join, faculty, department) VALUES (
+INSERT INTO student (email, name, joined, faculty, department) VALUES (
   'ben.lim@u.nun.edu',
   'BEN LIM',
   '2026-08-10',

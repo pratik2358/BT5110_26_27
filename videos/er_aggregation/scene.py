@@ -115,6 +115,69 @@ def card_label(text, mobj, direction=UP, buff=0.1, font_size=18,
 
 
 # ---------------------------------------------------------------------------
+# Attribute-connector building blocks (Merise-style circles: hollow = plain
+# attribute, filled = identifying attribute; a filled circle joined by a
+# bar means "these together form a composite key")
+# ---------------------------------------------------------------------------
+
+DOT_R = 0.05
+
+
+def filled_dot(point):
+    return Dot(point, radius=DOT_R, color=WHITE)
+
+
+def hollow_dot(point):
+    return Circle(radius=DOT_R, color=WHITE, stroke_width=2,
+                   fill_color=config.background_color, fill_opacity=1
+                   ).move_to(point)
+
+
+def composite_attrs(entity, labels, x_offsets, direction=DOWN,
+                     key_gap=0.4, leaf_gap=0.4, font_size=15):
+    """A composite-key group: entity -> filled circle (joined by a bar)
+    -> hollow circle -> label, one branch per offset in x_offsets."""
+    base = entity.get_bottom() if direction is DOWN else entity.get_top()
+    sign = -1 if direction is DOWN else 1
+    group = VGroup()
+    key_pts = []
+    for dx in x_offsets:
+        top_pt = base + RIGHT * dx
+        key_pt = top_pt + UP * sign * key_gap
+        group.add(Line(top_pt, key_pt, color=WHITE, stroke_width=2))
+        key_pts.append(key_pt)
+    group.add(Line(key_pts[0], key_pts[-1], color=WHITE, stroke_width=2))
+    for pt in key_pts:
+        group.add(filled_dot(pt))
+    for pt, label in zip(key_pts, labels):
+        leaf_pt = pt + UP * sign * leaf_gap
+        group.add(Line(pt, leaf_pt, color=WHITE, stroke_width=2))
+        group.add(hollow_dot(leaf_pt))
+        txt = Text(label, font_size=font_size, color=GREY_B)
+        txt.next_to(leaf_pt, direction, buff=0.08)
+        group.add(txt)
+    return group
+
+
+def simple_attrs(entity, specs, direction=DOWN, gap=0.55, font_size=15):
+    """specs: list of (x_offset, label, filled:bool). Independent
+    (non-composite) attribute branches, straight from the entity."""
+    base = entity.get_bottom() if direction is DOWN else entity.get_top()
+    sign = -1 if direction is DOWN else 1
+    group = VGroup()
+    for dx, label, filled in specs:
+        top_pt = base + RIGHT * dx
+        end_pt = top_pt + UP * sign * gap
+        group.add(Line(top_pt, end_pt, color=WHITE, stroke_width=2))
+        dot = filled_dot(end_pt) if filled else hollow_dot(end_pt)
+        group.add(dot)
+        txt = Text(label, font_size=font_size, color=GREY_B)
+        txt.next_to(end_pt, direction, buff=0.08)
+        group.add(txt)
+    return group
+
+
+# ---------------------------------------------------------------------------
 # Scene 1 -- Title
 # ---------------------------------------------------------------------------
 
@@ -285,8 +348,8 @@ class S05_Aggregation(WatermarkedScene):
                    Create(hline(opened, bottle)))
         self.wait(0.6)
 
-        agg_box = SurroundingRectangle(top_row, color=HL, buff=0.3,
-                                        corner_radius=0.15, stroke_width=3)
+        agg_box = SurroundingRectangle(opened, color=HL, buff=0.4,
+                                        corner_radius=0.1, stroke_width=3)
         self.play(Create(agg_box))
         self.wait(0.4)
 
@@ -339,33 +402,35 @@ class S05_Aggregation(WatermarkedScene):
 
 class S06_FullDiagram(WatermarkedScene):
     def construct(self):
-        heading = Text("The full VINO diagram", font_size=32, weight=BOLD)
-        heading.to_edge(UP)
+        heading = Text("The full VINO diagram", font_size=30, weight=BOLD)
+        heading.to_edge(UP, buff=0.3)
         self.play(FadeIn(heading, shift=UP * 0.2))
 
+        ew, eh, ef = 1.7, 0.62, 17
+        dw, dh, df = 1.4, 0.7, 16
+
         # Top row: session -- opened -- bottle
-        session = entity_box("session", width=1.9, height=0.75, font_size=20)
-        opened = rel_diamond("opened", width=1.6, height=0.85, font_size=18)
-        bottle = entity_box("bottle", width=1.9, height=0.75, font_size=20)
-        top = VGroup(session, opened, bottle).arrange(RIGHT, buff=0.7)
-        top.move_to(UP * 2.0 + LEFT * 1.3)
+        session = entity_box("session", width=ew, height=eh, font_size=ef)
+        opened = rel_diamond("opened", width=dw, height=dh, font_size=df)
+        bottle = entity_box("bottle", width=ew, height=eh, font_size=ef)
+        top = VGroup(session, opened, bottle).arrange(RIGHT, buff=1.0)
+        top.move_to(UP * 1.25 + LEFT * 1.35)
 
         # Right column: bottle -- contain -- wine
-        contain = rel_diamond("contain", width=1.6, height=0.85, font_size=18)
-        wine = entity_box("wine", width=1.9, height=0.75, font_size=20)
-        contain.next_to(bottle, DOWN, buff=0.75)
-        wine.next_to(contain, DOWN, buff=0.75)
+        contain = rel_diamond("contain", width=dw, height=dh, font_size=df)
+        wine = entity_box("wine", width=2.7, height=eh, font_size=ef)
+        contain.next_to(bottle, DOWN, buff=0.62)
+        wine.next_to(contain, DOWN, buff=0.62)
 
         # Left column: opened -- tasted -- member
-        tasted = rel_diamond("tasted", width=1.6, height=0.85, font_size=18)
-        member = entity_box("member", width=1.9, height=0.75, font_size=20,
+        tasted = rel_diamond("tasted", width=dw, height=dh, font_size=df)
+        member = entity_box("member", width=ew, height=eh, font_size=ef,
                              fill=MEMBER_FILL)
-        tasted.next_to(opened, DOWN, buff=0.75)
-        member.next_to(tasted, DOWN, buff=0.75)
+        tasted.next_to(opened, DOWN, buff=0.62)
+        member.next_to(tasted, DOWN, buff=0.62)
 
         diagram = VGroup(session, opened, bottle, contain, wine, tasted,
                           member)
-        diagram.move_to(ORIGIN).shift(DOWN * 0.15 + LEFT * 0.6)
 
         lines = VGroup(
             hline(session, opened), hline(opened, bottle),
@@ -379,34 +444,96 @@ class S06_FullDiagram(WatermarkedScene):
         self.play(Create(lines[2]), Create(lines[3]), FadeIn(contain))
         self.wait(0.5)
 
-        agg_box = SurroundingRectangle(top, color=HL, buff=0.22,
-                                        corner_radius=0.12, stroke_width=3)
+        # Aggregate box floats around "opened" alone -- not touching it --
+        # session/bottle's wires cross into it to reach the diamond.
+        agg_box = SurroundingRectangle(opened, color=HL, buff=0.3,
+                                        corner_radius=0.08, stroke_width=2.5)
         self.play(Create(agg_box))
         self.wait(0.4)
 
         self.play(Create(lines[4]), Create(lines[5]), FadeIn(tasted))
-        self.wait(0.8)
+        self.wait(0.6)
 
-        c1 = card_label("(0,n)", lines[0], UP)
-        c2 = card_label("(0,1)", lines[1], UP)
-        c3 = card_label("(1,1)", lines[2], RIGHT, buff=0.15)
-        c4 = card_label("(0,n)", lines[3], RIGHT, buff=0.15)
-        c5 = card_label("(1,n)", lines[4], LEFT, buff=0.15)
-        c6 = card_label("(0,n)", lines[5], LEFT, buff=0.15)
+        c1 = card_label("(0,n)", lines[0], UP, font_size=16)
+        c2 = card_label("(0,1)", lines[1], UP, font_size=16)
+        c3 = card_label("(1,1)", lines[2], RIGHT, buff=0.12, font_size=16)
+        c4 = card_label("(0,n)", lines[3], RIGHT, buff=0.12, font_size=16)
+        c5 = card_label("(1,n)", lines[4], LEFT, buff=0.12, font_size=16)
+        c6 = card_label("(0,n)", lines[5], LEFT, buff=0.12, font_size=16)
         cards = VGroup(c1, c2, c3, c4, c5, c6)
         self.play(FadeIn(cards))
-        self.wait(1.5)
+        self.wait(0.6)
 
-        note = Text(
-            "Slides usually skip drawing the box — a diamond wired straight\n"
-            "to another diamond already means \"aggregated\".",
-            font_size=20, color=GREY_B, line_spacing=1.3,
-        )
-        note.next_to(diagram, DOWN, buff=0.4)
-        self.play(FadeIn(note, shift=UP * 0.2))
-        self.wait(1.2)
-        self.play(FadeOut(agg_box))
-        self.wait(1.8)
+        # ---- attributes ----
+        attrs = VGroup()
+
+        # session: year, week (composite key)
+        attrs.add(composite_attrs(session, ["year", "week"], [-0.42, 0.42]))
+
+        # bottle: in_cellar (derived, dashed), Number (weak-entity key)
+        cellar_top = bottle.get_top() + LEFT * 0.42
+        cellar_end = cellar_top + UP * 0.5
+        attrs.add(DashedLine(cellar_top, cellar_end, color=WHITE,
+                              stroke_width=2, dash_length=0.05))
+        attrs.add(hollow_dot(cellar_end))
+        cellar_label = Text("in_cellar", font_size=15, color=GREY_B)
+        cellar_label.next_to(cellar_end, UP, buff=0.08)
+        attrs.add(cellar_label)
+
+        num_top = bottle.get_top() + RIGHT * 0.42
+        num_junction = num_top + UP * 0.32
+        num_leaf = num_junction + UP * 0.32
+        attrs.add(Line(num_top, num_junction, color=WHITE, stroke_width=2))
+        attrs.add(filled_dot(num_junction))
+        attrs.add(Line(num_junction, num_leaf, color=WHITE, stroke_width=2))
+        attrs.add(hollow_dot(num_leaf))
+        num_label = Text("Number", font_size=15, color=GREY_B)
+        num_label.next_to(num_leaf, UP, buff=0.08)
+        attrs.add(num_label)
+
+        # Number is scoped by wine (weak entity): route right, down, then
+        # into the same point where contain's wire meets wine, raised
+        # slightly off the box edge.
+        wine_junction = wine.get_top() + UP * 0.15
+        route = VMobject(color=WHITE, stroke_width=2)
+        via = num_junction + RIGHT * 1.15
+        route.set_points_as_corners([
+            num_junction, via, np.array([via[0], wine_junction[1], 0]),
+            wine_junction,
+        ])
+        attrs.add(route)
+        attrs.add(filled_dot(wine_junction))
+
+        # wine: Others (plain), W.Name / Appellation / Vintage (composite)
+        others_top = wine.get_top() + LEFT * 0.75
+        others_end = others_top + UP * 0.5
+        attrs.add(Line(others_top, others_end, color=WHITE, stroke_width=2))
+        attrs.add(hollow_dot(others_end))
+        others_label = Text("Others", font_size=15, color=GREY_B)
+        others_label.next_to(others_end, UP, buff=0.08)
+        attrs.add(others_label)
+
+        attrs.add(composite_attrs(
+            wine, ["W.Name", "Appellation", "Vintage"], [-1.0, 0, 1.0]))
+
+        # member: Name, Address (plain), C.id (identifier)
+        attrs.add(simple_attrs(member, [
+            (-0.85, "Name", False),
+            (0, "Address", False),
+            (0.85, "C.id", True),
+        ]))
+
+        # tasted: Rating (plain, diagonal to the lower-left)
+        rating_top = tasted.get_critical_point(DL)
+        rating_end = rating_top + LEFT * 0.55 + DOWN * 0.2
+        attrs.add(Line(rating_top, rating_end, color=WHITE, stroke_width=2))
+        attrs.add(hollow_dot(rating_end))
+        rating_label = Text("Rating", font_size=15, color=GREY_B)
+        rating_label.next_to(rating_end, LEFT, buff=0.08)
+        attrs.add(rating_label)
+
+        self.play(FadeIn(attrs))
+        self.wait(2.2)
 
         self.clear_scene()
 

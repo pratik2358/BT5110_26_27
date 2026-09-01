@@ -56,7 +56,7 @@ mkdir -p "$SITE_DIR/thumbs"
 cp "$FINAL" "$SITE_DIR/tut_02_er_aggregation.mp4"
 
 # Grab a thumbnail from the full-diagram scene.
-ffmpeg -y -ss 00:01:05 -i "$FINAL" -frames:v 1 -vf "scale=480:-1" \
+ffmpeg -y -ss 00:01:06 -i "$FINAL" -frames:v 1 -vf "scale=480:-1" \
   "$SITE_DIR/thumbs/tut_02_er_aggregation.png"
 
 echo "Copied video + thumbnail into $SITE_DIR"

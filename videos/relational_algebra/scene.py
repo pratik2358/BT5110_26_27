@@ -404,17 +404,37 @@ class S07_CrossJoin(Scene):
         self.wait(1.6)
 
         result_note = Text(
-            "Every row of R is paired with every row of S —",
+            "Every row of R is paired with every row of S",
             font_size=22, color=GREY_B,
         )
-        result_note2 = Text(
-            "most pairings are meaningless",
-            font_size=22, color=GREY_B,
+        result_note.next_to(count, DOWN, buff=0.35)
+        self.play(FadeIn(result_note, shift=UP * 0.2))
+        self.wait(1.2)
+
+        self.play(*[FadeOut(m) for m in self.mobjects])
+
+        # --- Show the full 16-row result ---
+        heading2 = Text("Result of R × S  —  all 16 rows", font_size=32,
+                         weight=BOLD)
+        heading2.to_edge(UP)
+        self.play(FadeIn(heading2, shift=UP * 0.2))
+
+        cross_cols = ["R.sid", "R.sname", "R.age", "R.major",
+                      "S.sid", "S.cid", "S.grade"]
+        cross_data = [r + s for r in STUDENT_ROWS for s in ENROLL_ROWS]
+        cross_group = relation_table(cross_data, cross_cols, scale=0.27,
+                                      name="R × S")
+        cross_group.next_to(heading2, DOWN, buff=0.3)
+        self.play(Create(cross_group))
+        self.wait(1.8)
+
+        note = Text(
+            "Most of these pairings are meaningless — that's why we filter with a condition",
+            font_size=20, color=GREY_B,
         )
-        result_notes = VGroup(result_note, result_note2).arrange(DOWN, buff=0.1)
-        result_notes.next_to(count, DOWN, buff=0.4)
-        self.play(FadeIn(result_notes, shift=UP * 0.2))
-        self.wait(1.6)
+        note.next_to(cross_group, DOWN, buff=0.3)
+        self.play(FadeIn(note, shift=UP * 0.2))
+        self.wait(1.8)
 
         self.play(*[FadeOut(m) for m in self.mobjects])
 
@@ -461,9 +481,15 @@ class S08_ThetaJoin(Scene):
 
         self.play(*[FadeOut(m) for m in self.mobjects])
 
-        heading2 = Text("Result of R ⋈ S", font_size=34, weight=BOLD)
+        heading2 = Text("Result of the join", font_size=34, weight=BOLD)
         heading2.to_edge(UP)
         self.play(FadeIn(heading2, shift=UP * 0.2))
+
+        condition = ra_expr(r"R \Join_{\,R.\mathit{sid}\,=\,S.\mathit{sid}}\, S",
+                             font_size=30, color=ACCENT)
+        condition.next_to(heading2, DOWN, buff=0.3)
+        self.play(Write(condition))
+        self.wait(0.6)
 
         result_data = [
             ["1", "Alice", "21", "CS", "CS101", "A"],
@@ -473,8 +499,8 @@ class S08_ThetaJoin(Scene):
         ]
         result_cols = ["sid", "sname", "age", "major", "cid", "grade"]
         result_group = relation_table(result_data, result_cols, scale=0.5,
-                                       name="R \\Join S")
-        result_group.next_to(heading2, DOWN, buff=0.6)
+                                       name="R ⋈ S")
+        result_group.next_to(condition, DOWN, buff=0.45)
         self.play(Create(result_group))
         self.wait(1.6)
 

@@ -526,8 +526,11 @@ class S06_FullDiagram(WatermarkedScene):
             (0.85, "C.id", True),
         ]))
 
-        # tasted: Rating (plain, diagonal to the lower-left)
-        rating_top = tasted.get_critical_point(DL)
+        # tasted: Rating (plain, diagonal to the lower-left) -- attach to
+        # a point on the diamond's actual lower-left edge, not the empty
+        # corner of its bounding box.
+        rating_top = (tasted.diamond.get_left() +
+                      tasted.diamond.get_bottom()) / 2
         rating_end = rating_top + LEFT * 0.55 + DOWN * 0.2
         attrs.add(Line(rating_top, rating_end, color=WHITE, stroke_width=2))
         attrs.add(hollow_dot(rating_end))

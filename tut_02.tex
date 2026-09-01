@@ -295,8 +295,10 @@ We first want to design an entity-relationship schema that most correctly and mo
 \node[erlabel, above=1mm of num-leaf] {Number};
 
 % Number is scoped by wine (weak entity): route down to wine's corner
-\draw[erwire] (num-dot.east) -- ++(1.1,0) |- (wine.north);
-\node[erfilled] at ($(wine.north)+(0,0.2)$) {};
+\coordinate (wine-junction) at ($(wine.north)+(0,0.2)$);
+\draw[erwire] (num-dot.east) -- ++(1.1,0) |- (wine-junction);
+\draw[erwire] (wine-junction) -- (wine.north);
+\node[erfilled] at (wine-junction) {};
 
 % ---- wine attributes: Others, W.Name / Appellation / Vintage (composite) ----
 \coordinate (others-attr) at ($(wine.north)+(-1.3,0.9)$);

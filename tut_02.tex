@@ -9,7 +9,7 @@
 \usepackage{subcaption}
 \usepackage{caption}
 \usepackage{tikz}
-\usetikzlibrary{overlay-beamer-styles}
+\usetikzlibrary{overlay-beamer-styles, shapes.geometric, positioning, fit, calc}
 \usepackage{booktabs,multicol,stackengine}
 \usepackage[table,dvipsnames]{xcolor}
 \usepackage{cancel}
@@ -21,6 +21,21 @@
 \definecolor{nus-orange}{RGB}{239,124,0}
 \definecolor{nus-blue}{RGB}{0,61,124}
 \definecolor{halfgray}{gray}{0.55}
+
+% ER diagram palette and node styles (used by the VINO ER diagram)
+\definecolor{ergreen}{RGB}{217,234,211}
+\definecolor{erpink}{RGB}{234,209,220}
+\definecolor{erline}{RGB}{89,89,89}
+\tikzset{
+  erentity/.style={rectangle, draw=erline, thick, minimum width=3.1cm, minimum height=1.2cm, align=center, font=\Large, fill=white},
+  errel/.style={diamond, draw=erline, thick, minimum width=2.3cm, minimum height=1.25cm, align=center, font=\large, fill=white, inner sep=0pt},
+  erwire/.style={draw=erline, thick},
+  erwiredash/.style={draw=erline, thick, dash pattern=on 2pt off 2pt},
+  erfilled/.style={circle, draw=erline, fill=erline, minimum size=4pt, inner sep=0pt},
+  erhollow/.style={circle, draw=erline, fill=white, minimum size=4pt, inner sep=0pt},
+  erlabel/.style={font=\normalsize, color=erline},
+  ercard/.style={font=\normalsize, color=erline},
+}
 
 \lstset{
   basicstyle=\ttfamily\footnotesize,
@@ -213,10 +228,123 @@ We first want to design an entity-relationship schema that most correctly and mo
 \end{frame}
 
 \begin{frame}
-    \begin{figure}
-        \centering
-        \includegraphics[width=1.1\linewidth]{tut_02_files/21.pdf}
-    \end{figure}
+\begin{center}
+\begin{tikzpicture}[scale=0.66, every node/.style={transform shape}]
+
+% ---- Row 1: session -- opened -- bottle ----
+\node[erentity, fill=ergreen] (session) at (0,0) {session};
+\node[errel] (opened) at (5.0,0) {opened};
+\node[erentity, fill=ergreen] (bottle) at (10.4,0) {bottle};
+
+% Aggregate box around "opened" -- diamond floats inside, not touching
+\node[erwire, fit=(opened), inner sep=9mm] (aggbox) {};
+
+% ---- Right column: contain -- wine ----
+\node[errel] (contain) at (10.4,-3.4) {contain};
+\node[erentity] (wine) at (10.4,-6.8) {wine};
+
+% ---- Left column: tasted -- member ----
+\node[errel] (tasted) at (5.0,-3.4) {tasted};
+\node[erentity, fill=erpink] (member) at (5.0,-6.8) {member};
+
+% ---- Main relationship wires ----
+\draw[erwire] (session.east) -- (opened.west);
+\draw[erwire] (opened.east) -- (bottle.west);
+\draw[erwire] (aggbox.south) -- (tasted.north);
+\draw[erwire] (tasted.south) -- (member.north);
+\draw[erwire] (bottle.south) -- (contain.north);
+\draw[erwire] (contain.south) -- (wine.north);
+
+% ---- Cardinalities ----
+\node[ercard] at ($(session.east)+(0.6,0.3)$) {(0,n)};
+\node[ercard] at ($(bottle.west)+(-0.55,0.3)$) {(0,1)};
+\node[ercard] at ($(aggbox.south)+(-0.6,-0.3)$) {(1,n)};
+\node[ercard] at ($(member.north)+(-0.6,0.3)$) {(0,n)};
+\node[ercard] at ($(bottle.south)+(-0.55,-0.3)$) {(1,1)};
+\node[ercard] at ($(wine.north)+(-0.6,0.3)$) {(0,n)};
+
+% ---- session attributes: year, week (composite key) ----
+\coordinate (yr-key) at ($(session.south)+(-0.7,-0.55)$);
+\coordinate (wk-key) at ($(session.south)+(0.7,-0.55)$);
+\draw[erwire] ($(session.south)+(-0.7,0)$) -- (yr-key);
+\draw[erwire] ($(session.south)+(0.7,0)$) -- (wk-key);
+\draw[erwire] (yr-key) -- (wk-key);
+\node[erfilled] at (yr-key) {};
+\node[erfilled] at (wk-key) {};
+\coordinate (yr-attr) at ($(yr-key)+(0,-0.55)$);
+\coordinate (wk-attr) at ($(wk-key)+(0,-0.55)$);
+\draw[erwire] (yr-key) -- (yr-attr);
+\draw[erwire] (wk-key) -- (wk-attr);
+\node[erhollow] (year-dot) at (yr-attr) {};
+\node[erhollow] (week-dot) at (wk-attr) {};
+\node[erlabel, below=1mm of year-dot] {year};
+\node[erlabel, below=1mm of week-dot] {week};
+
+% ---- bottle attributes: in_cellar (derived), Number (identifier) ----
+\coordinate (cellar-attr) at ($(bottle.north)+(-0.7,0.9)$);
+\draw[erwiredash] ($(bottle.north)+(-0.7,0)$) -- (cellar-attr);
+\node[erhollow] (cellar-dot) at (cellar-attr) {};
+\node[erlabel, above=1mm of cellar-dot] {in\_cellar};
+
+\coordinate (num-attr) at ($(bottle.north)+(0.7,0.9)$);
+\draw[erwire] ($(bottle.north)+(0.7,0)$) -- (num-attr);
+\node[erfilled] (num-dot) at (num-attr) {};
+\node[erlabel, above=1mm of num-dot] {Number};
+
+% Number is scoped by wine (weak entity): route down to wine's corner
+\draw[erwire] (num-dot.east) -- ++(1.1,0) |- ($(wine.north)+(0.65,0)$);
+
+% ---- wine attributes: Others, W.Name / Appellation / Vintage (composite) ----
+\coordinate (others-attr) at ($(wine.north west)+(-0.3,0.9)$);
+\draw[erwire] (wine.north west) -- (others-attr);
+\node[erhollow] (others-dot) at (others-attr) {};
+\node[erlabel, above=1mm of others-dot] {Others};
+
+\coordinate (wn-key) at ($(wine.south)+(-2.1,-0.55)$);
+\coordinate (ap-key) at ($(wine.south)+(0,-0.55)$);
+\coordinate (vt-key) at ($(wine.south)+(2.1,-0.55)$);
+\draw[erwire] ($(wine.south)+(-2.1,0)$) -- (wn-key);
+\draw[erwire] (wine.south) -- (ap-key);
+\draw[erwire] ($(wine.south)+(2.1,0)$) -- (vt-key);
+\draw[erwire] (wn-key) -- (vt-key);
+\node[erfilled] at (wn-key) {};
+\node[erfilled] at (ap-key) {};
+\node[erfilled] at (vt-key) {};
+\coordinate (wn-attr) at ($(wn-key)+(0,-0.55)$);
+\coordinate (ap-attr) at ($(ap-key)+(0,-0.55)$);
+\coordinate (vt-attr) at ($(vt-key)+(0,-0.55)$);
+\draw[erwire] (wn-key) -- (wn-attr);
+\draw[erwire] (ap-key) -- (ap-attr);
+\draw[erwire] (vt-key) -- (vt-attr);
+\node[erhollow] (wn-dot) at (wn-attr) {};
+\node[erhollow] (ap-dot) at (ap-attr) {};
+\node[erhollow] (vt-dot) at (vt-attr) {};
+\node[erlabel, below=1mm of wn-dot] {W.Name};
+\node[erlabel, below=1mm of ap-dot] {Appellation};
+\node[erlabel, below=1mm of vt-dot] {Vintage};
+
+% ---- member attributes: Name, Address (plain), C.id (identifier) ----
+\coordinate (name-attr) at ($(member.south)+(-1.3,-0.6)$);
+\coordinate (addr-attr) at ($(member.south)+(0,-0.6)$);
+\coordinate (cid-attr) at ($(member.south)+(1.3,-0.6)$);
+\draw[erwire] ($(member.south)+(-1.3,0)$) -- (name-attr);
+\draw[erwire] (member.south) -- (addr-attr);
+\draw[erwire] ($(member.south)+(1.3,0)$) -- (cid-attr);
+\node[erhollow] (name-dot) at (name-attr) {};
+\node[erhollow] (addr-dot) at (addr-attr) {};
+\node[erfilled] (cid-dot) at (cid-attr) {};
+\node[erlabel, below=1mm of name-dot] {Name};
+\node[erlabel, below=1mm of addr-dot] {Address};
+\node[erlabel, below=1mm of cid-dot] {C.id};
+
+% ---- tasted attribute: Rating (plain, diagonal) ----
+\coordinate (rating-attr) at ($(tasted.south west)+(-0.9,-0.35)$);
+\draw[erwire] (tasted.south west) -- (rating-attr);
+\node[erhollow] (rating-dot) at (rating-attr) {};
+\node[erlabel, left=1mm of rating-dot] {Rating};
+
+\end{tikzpicture}
+\end{center}
 \end{frame}
 
 \begin{frame}{Q2. Logical Design}

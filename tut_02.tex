@@ -237,7 +237,7 @@ We first want to design an entity-relationship schema that most correctly and mo
 \node[erentity, fill=ergreen] (bottle) at (10.4,0) {bottle};
 
 % Aggregate box around "opened" -- diamond floats inside, not touching
-\node[erwire, fit=(opened), inner sep=9mm] (aggbox) {};
+\node[erwire, fit=(opened), inner xsep=7mm, inner ysep=2mm] (aggbox) {};
 
 % ---- Right column: contain -- wine ----
 \node[errel] (contain) at (10.4,-3.4) {contain};
@@ -295,8 +295,8 @@ We first want to design an entity-relationship schema that most correctly and mo
 \draw[erwire] (num-dot.east) -- ++(1.1,0) |- ($(wine.north)+(0.65,0)$);
 
 % ---- wine attributes: Others, W.Name / Appellation / Vintage (composite) ----
-\coordinate (others-attr) at ($(wine.north west)+(-0.3,0.9)$);
-\draw[erwire] (wine.north west) -- (others-attr);
+\coordinate (others-attr) at ($(wine.north)+(-1.3,0.9)$);
+\draw[erwire] ($(wine.north)+(-1.3,0)$) -- (others-attr);
 \node[erhollow] (others-dot) at (others-attr) {};
 \node[erlabel, above=1mm of others-dot] {Others};
 

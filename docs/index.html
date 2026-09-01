@@ -103,12 +103,15 @@
     display: flex;
     align-items: center;
     gap: 1.1rem;
-    padding: 0.55rem 0.25rem 1.15rem;
+    padding: 0.4rem 0.25rem;
     margin-left: 2.3rem;
     text-decoration: none;
     color: inherit;
     transition: background-color 0.15s ease, transform 0.15s ease;
     border-radius: 10px;
+  }
+  .video-row:last-child {
+    padding-bottom: 1.15rem;
   }
   .video-row:hover, .video-row:focus-visible {
     background: var(--accent-soft);
@@ -216,15 +219,24 @@
   // thumb: first-page preview, generated with e.g.
   //   pdftoppm -png -r 300 -f 1 -l 1 tut_01.pdf thumb && sips -Z 480 thumb-01.png --out slides/thumbs/tut_01.png
   //
-  // Optional video fields (see videos/<topic>/render.sh for how these are
-  // built): video, videoThumb, videoTitle.
+  // Optional `videos` array (see videos/<topic>/render.sh for how each
+  // src/thumb pair is built): [{ src, thumb, title }, ...].
   const TUTORIALS = [
     {
       num: 1, file: "slides/tut_01.pdf", thumb: "slides/thumbs/tut_01.png",
       title: "Relational Model",
-      video: "videos/tut_01_relational_algebra.mp4",
-      videoThumb: "videos/thumbs/tut_01_relational_algebra.png",
-      videoTitle: "Relational Algebra",
+      videos: [
+        {
+          src: "videos/tut_01_relational_algebra.mp4",
+          thumb: "videos/thumbs/tut_01_relational_algebra.png",
+          title: "Relational Algebra",
+        },
+        {
+          src: "videos/tut_01_view_availability.mp4",
+          thumb: "videos/thumbs/tut_01_view_availability.png",
+          title: "Views & EXISTS",
+        },
+      ],
     },
     { num: 2, file: "slides/tut_02.pdf", thumb: "slides/thumbs/tut_02.png", title: "Entity-Relationship Model" },
   ];
@@ -269,23 +281,23 @@
         if (t.thumb) loadThumb(a.querySelector(".thumb"), t.thumb);
         item.appendChild(a);
 
-        if (t.video) {
+        (t.videos || []).forEach(vid => {
           const v = document.createElement("a");
           v.className = "video-row";
-          v.href = t.video;
+          v.href = vid.src;
           v.target = "_blank";
           v.rel = "noopener";
           v.innerHTML = `
             <span class="thumb"><span class="fallback">${num}</span><span class="play-badge"><span>&#9654;</span></span></span>
             <span class="meta">
-              <p class="title">${t.videoTitle || "Watch the video"}</p>
+              <p class="title">${vid.title || "Watch the video"}</p>
               <p class="label">Tutorial ${t.num} &middot; Video</p>
             </span>
             <span class="arrow">&#8599;</span>
           `;
-          if (t.videoThumb) loadThumb(v.querySelector(".thumb"), t.videoThumb);
+          if (vid.thumb) loadThumb(v.querySelector(".thumb"), vid.thumb);
           item.appendChild(v);
-        }
+        });
 
         list.appendChild(item);
       });

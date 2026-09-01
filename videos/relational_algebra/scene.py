@@ -549,6 +549,7 @@ class S09_FinalQuery(Scene):
 
         # Move the full RA expression out of the way, leaving room on the
         # right for each step's fragment while the SQL stays put on the left.
+        ra_full_original = ra_full.copy()
         self.play(ra_full.animate.scale(0.75).to_corner(UR, buff=0.4))
 
         lines = sql_panel[1]  # the VGroup of Text lines
@@ -585,60 +586,9 @@ class S09_FinalQuery(Scene):
         show_step("Step 3 — Project just sname",
                    r"\pi_{\,\mathit{sname}}(\cdot)", [0])
 
-        self.play(FadeOut(sql_panel), FadeOut(ra_full), FadeOut(goal),
-                   FadeOut(heading))
-
-        # --- Walk the data through each stage ---
-        stage_title = Text("Watch the data flow through each stage",
-                            font_size=30, weight=BOLD)
-        stage_title.to_edge(UP)
-        self.play(FadeIn(stage_title, shift=UP * 0.2))
-
-        joined_data = [
-            ["1", "Alice", "CS101", "A"],
-            ["1", "Alice", "CS102", "B"],
-            ["2", "Bob", "EE101", "A"],
-            ["3", "Carol", "CS101", "B"],
-        ]
-        joined_cols = ["sid", "sname", "cid", "grade"]
-        t1 = relation_table(joined_data, joined_cols, scale=0.4,
-                             name="after JOIN")
-
-        sel_data = [["1", "Alice", "CS101", "A"]]
-        t2 = relation_table(sel_data, joined_cols, scale=0.4,
-                             name="after SELECT")
-
-        final_data = [["Alice"]]
-        t3 = relation_table(final_data, ["sname"], scale=0.4,
-                             name="final result")
-
-        arrow1 = Arrow(LEFT, RIGHT, color=ACCENT).scale(0.6)
-        arrow2 = Arrow(LEFT, RIGHT, color=ACCENT).scale(0.6)
-
-        flow = VGroup(t1, arrow1, t2, arrow2, t3).arrange(RIGHT, buff=0.35)
-        if flow.width > 13.0:
-            flow.scale_to_fit_width(13.0)
-        flow.move_to(ORIGIN).shift(DOWN * 0.2)
-
-        self.play(Create(t1))
-        self.wait(1)
-        self.play(GrowArrow(arrow1))
-        self.play(Create(t2))
-        self.wait(1)
-        self.play(GrowArrow(arrow2))
-        self.play(Create(t3))
-        self.wait(2)
+        # Close on the full composite query -- SQL alongside its RA
+        # expression -- as the final beat of the video.
+        self.play(ra_full.animate.become(ra_full_original))
+        self.wait(2.5)
 
         self.play(*[FadeOut(m) for m in self.mobjects])
-
-
-class S10_Outro(Scene):
-    def construct(self):
-        title = Text("Selection · Projection · Join", font_size=40, weight=BOLD)
-        sub = Text("The building blocks of every SQL query",
-                    font_size=26, color=GREY_B)
-        group = VGroup(title, sub).arrange(DOWN, buff=0.35)
-        self.play(Write(title))
-        self.play(FadeIn(sub, shift=UP * 0.2))
-        self.wait(2)
-        self.play(FadeOut(group))

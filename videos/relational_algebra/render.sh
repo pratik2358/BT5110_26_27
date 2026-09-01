@@ -25,7 +25,6 @@ SCENES=(
   S07_CrossJoin
   S08_ThetaJoin
   S09_FinalQuery
-  S10_Outro
 )
 
 cd "$DIR"

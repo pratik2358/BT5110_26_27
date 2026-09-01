@@ -109,11 +109,29 @@ ENROLL_ROWS = [
 ]
 
 
+class WatermarkedScene(Scene):
+    """Base class that keeps a small, unobtrusive credit in the footnote
+    corner for the whole scene, independent of whatever else is faded
+    in and out during construct()."""
+
+    def setup(self):
+        super().setup()
+        self.watermark = Text("Pratik Karmakar", font_size=16, color=GREY_C)
+        self.watermark.set_opacity(0.45)
+        self.watermark.to_corner(DR, buff=0.2)
+        self.add(self.watermark)
+
+    def clear_scene(self):
+        self.play(*[
+            FadeOut(m) for m in self.mobjects if m is not self.watermark
+        ])
+
+
 # ---------------------------------------------------------------------------
 # Scene 1 -- Title
 # ---------------------------------------------------------------------------
 
-class S01_Title(Scene):
+class S01_Title(WatermarkedScene):
     def construct(self):
         kicker = Text("BT5110 · Tutorial 1", font_size=28, color=ACCENT)
         title = Text("Relational Algebra", font_size=56, weight=BOLD)
@@ -133,7 +151,7 @@ class S01_Title(Scene):
 # Scene 2 -- Introduce a relation
 # ---------------------------------------------------------------------------
 
-class S02_IntroRelation(Scene):
+class S02_IntroRelation(WatermarkedScene):
     def construct(self):
         heading = Text("A table is a relation", font_size=36, weight=BOLD)
         heading.to_edge(UP)
@@ -181,14 +199,14 @@ class S02_IntroRelation(Scene):
         self.play(FadeIn(col_label), GrowArrow(arrow2))
         self.wait(1.2)
 
-        self.play(*[FadeOut(m) for m in self.mobjects])
+        self.clear_scene()
 
 
 # ---------------------------------------------------------------------------
 # Scene 3 -- Selection
 # ---------------------------------------------------------------------------
 
-class S03_Selection(Scene):
+class S03_Selection(WatermarkedScene):
     def construct(self):
         heading = Text("Selection  —  filters rows", font_size=34, weight=BOLD)
         heading.to_edge(UP)
@@ -236,14 +254,14 @@ class S03_Selection(Scene):
         self.play(FadeIn(result_cap, shift=UP * 0.2))
         self.wait(1.4)
 
-        self.play(*[FadeOut(m) for m in self.mobjects])
+        self.clear_scene()
 
 
 # ---------------------------------------------------------------------------
 # Scene 4 -- Projection
 # ---------------------------------------------------------------------------
 
-class S04_Projection(Scene):
+class S04_Projection(WatermarkedScene):
     def construct(self):
         heading = Text("Projection  —  selects columns", font_size=34, weight=BOLD)
         heading.to_edge(UP)
@@ -290,14 +308,14 @@ class S04_Projection(Scene):
         self.play(FadeIn(result_cap, shift=UP * 0.2))
         self.wait(1.4)
 
-        self.play(*[FadeOut(m) for m in self.mobjects])
+        self.clear_scene()
 
 
 # ---------------------------------------------------------------------------
 # Scene 5 -- Composing selection + projection
 # ---------------------------------------------------------------------------
 
-class S05_Compose(Scene):
+class S05_Compose(WatermarkedScene):
     def construct(self):
         heading = Text("Operations compose", font_size=34, weight=BOLD)
         heading.to_edge(UP)
@@ -329,14 +347,14 @@ class S05_Compose(Scene):
         self.play(FadeIn(note, shift=UP * 0.2))
         self.wait(1.6)
 
-        self.play(*[FadeOut(m) for m in self.mobjects])
+        self.clear_scene()
 
 
 # ---------------------------------------------------------------------------
 # Scene 6 -- A second relation
 # ---------------------------------------------------------------------------
 
-class S06_SecondTable(Scene):
+class S06_SecondTable(WatermarkedScene):
     def construct(self):
         heading = Text("Bring in a second relation", font_size=34, weight=BOLD)
         heading.to_edge(UP)
@@ -359,14 +377,14 @@ class S06_SecondTable(Scene):
         self.play(FadeIn(note, shift=UP * 0.2))
         self.wait(1.4)
 
-        self.play(*[FadeOut(m) for m in self.mobjects])
+        self.clear_scene()
 
 
 # ---------------------------------------------------------------------------
 # Scene 7 -- Cross join
 # ---------------------------------------------------------------------------
 
-class S07_CrossJoin(Scene):
+class S07_CrossJoin(WatermarkedScene):
     def construct(self):
         heading = Text("Cross Join  —  every pairing", font_size=34, weight=BOLD)
         heading.to_edge(UP)
@@ -411,7 +429,7 @@ class S07_CrossJoin(Scene):
         self.play(FadeIn(result_note, shift=UP * 0.2))
         self.wait(1.2)
 
-        self.play(*[FadeOut(m) for m in self.mobjects])
+        self.clear_scene()
 
         # --- Show the full 16-row result ---
         heading2 = Text("Result of R × S  —  all 16 rows", font_size=32,
@@ -436,14 +454,14 @@ class S07_CrossJoin(Scene):
         self.play(FadeIn(note, shift=UP * 0.2))
         self.wait(1.8)
 
-        self.play(*[FadeOut(m) for m in self.mobjects])
+        self.clear_scene()
 
 
 # ---------------------------------------------------------------------------
 # Scene 8 -- Theta / equi join
 # ---------------------------------------------------------------------------
 
-class S08_ThetaJoin(Scene):
+class S08_ThetaJoin(WatermarkedScene):
     def construct(self):
         heading = Text("Join with a condition", font_size=34, weight=BOLD)
         heading.to_edge(UP)
@@ -479,7 +497,7 @@ class S08_ThetaJoin(Scene):
         self.play(FadeIn(note, shift=UP * 0.2))
         self.wait(1.4)
 
-        self.play(*[FadeOut(m) for m in self.mobjects])
+        self.clear_scene()
 
         heading2 = Text("Result of the join", font_size=34, weight=BOLD)
         heading2.to_edge(UP)
@@ -504,14 +522,14 @@ class S08_ThetaJoin(Scene):
         self.play(Create(result_group))
         self.wait(1.6)
 
-        self.play(*[FadeOut(m) for m in self.mobjects])
+        self.clear_scene()
 
 
 # ---------------------------------------------------------------------------
 # Scene 9 -- A larger query, decomposed
 # ---------------------------------------------------------------------------
 
-class S09_FinalQuery(Scene):
+class S09_FinalQuery(WatermarkedScene):
     def construct(self):
         heading = Text("Putting it all together", font_size=34, weight=BOLD)
         heading.to_edge(UP)
@@ -591,4 +609,4 @@ class S09_FinalQuery(Scene):
         self.play(ra_full.animate.become(ra_full_original))
         self.wait(2.5)
 
-        self.play(*[FadeOut(m) for m in self.mobjects])
+        self.clear_scene()

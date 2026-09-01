@@ -57,7 +57,7 @@ cp "$FINAL" "$SITE_DIR/tut_01_view_availability.mp4"
 
 # Grab a thumbnail from the EXISTS walkthrough, where both tables and
 # a verdict are visible.
-ffmpeg -y -ss 00:00:55 -i "$FINAL" -frames:v 1 -vf "scale=480:-1" \
+ffmpeg -y -ss 00:00:56 -i "$FINAL" -frames:v 1 -vf "scale=480:-1" \
   "$SITE_DIR/thumbs/tut_01_view_availability.png"
 
 echo "Copied video + thumbnail into $SITE_DIR"

@@ -58,10 +58,24 @@ def labelled_box(mobj, label, color=ACCENT):
     return group
 
 
+def book_header():
+    """Column header for `book`, annotated as the FK it really is so
+    viewers don't mistake it for a title -- it's book.isbn13."""
+    top = Text("book", font=MONO_FONT, weight=BOLD)
+    bottom = Text("(isbn13)", font=MONO_FONT, color=GREY_C, font_size=24)
+    return VGroup(top, bottom).arrange(DOWN, buff=0.08)
+
+
+def make_col_label(c):
+    if c == "book":
+        return book_header()
+    return Text(c, font=MONO_FONT, weight=BOLD)
+
+
 def data_table(data, col_labels, name=None, scale=0.5, name_color=ACCENT):
     table = Table(
         data,
-        col_labels=[Text(c, font=MONO_FONT, weight=BOLD) for c in col_labels],
+        col_labels=[make_col_label(c) for c in col_labels],
         include_outer_lines=True,
         line_config={"stroke_width": 1.5, "color": GREY_B},
     ).scale(scale)
@@ -336,16 +350,22 @@ class S05_CaseExists(WatermarkedScene):
 
         note = Text(
             "l.owner, l.book, l.copy refer back to c — the outer copy row",
-            font_size=26, color=ACCENT,
+            font_size=24, color=ACCENT,
         )
-        note2 = Text(
-            "EXISTS ( ... ) is TRUE exactly when that subquery returns at least one row",
-            font_size=26, color=ACCENT,
+        rule_true = Text(
+            "EXISTS ( subquery )  →  TRUE   if the subquery returns at least one row",
+            font_size=24, color=ACCENT,
+            t2c={"TRUE": HL, "at least one row": HL},
         )
-        notes = VGroup(note, note2).arrange(DOWN, buff=0.3)
+        rule_false = Text(
+            "EXISTS ( subquery )  →  FALSE  otherwise — if it returns no rows at all",
+            font_size=24, color=ACCENT,
+            t2c={"FALSE": HL, "no rows at all": HL},
+        )
+        notes = VGroup(note, rule_true, rule_false).arrange(DOWN, buff=0.32)
         notes.move_to(ORIGIN)
         self.play(FadeIn(notes, shift=UP * 0.2))
-        self.wait(2.2)
+        self.wait(2.6)
 
         self.clear_scene()
 
@@ -388,46 +408,55 @@ class S06_ExistsWalkthrough(WatermarkedScene):
                 color=color, buff=0.06,
             )
 
-        def run_case(copy_idx, matching_loan_idx, verdict, reason):
+        def run_case(copy_idx, exists_true, availability, reason,
+                     match_loan_idx=None, reject_loan_idx=None):
             c_box = highlight_copy_row(copy_idx)
             self.play(Create(c_box))
             self.wait(0.3)
 
-            if matching_loan_idx is not None:
-                l_box = highlight_loan_row(matching_loan_idx, GOOD)
+            boxes = [c_box]
+            if match_loan_idx is not None:
+                l_box = highlight_loan_row(match_loan_idx, GOOD)
                 self.play(Create(l_box))
-            else:
-                l_box = None
+                boxes.append(l_box)
+            elif reject_loan_idx is not None:
+                l_box = highlight_loan_row(reject_loan_idx, BAD)
+                self.play(Create(l_box))
+                boxes.append(l_box)
 
-            verdict_color = BAD if verdict == "FALSE" else GOOD
+            row_count = "returns 1 row" if exists_true else "returns 0 rows"
+            exists_str = "TRUE" if exists_true else "FALSE"
+            verdict_color = BAD if availability == "FALSE" else GOOD
             verdict_text = Text(
-                f"EXISTS -> {'TRUE' if verdict == 'FALSE' else 'FALSE'}"
-                f"   =>   available = '{verdict}'",
-                font_size=24, color=verdict_color, weight=BOLD,
+                f"subquery {row_count}  ⇒  EXISTS = {exists_str}"
+                f"  ⇒  available = '{availability}'",
+                font_size=22, color=verdict_color, weight=BOLD,
             )
             reason_text = Text(reason, font_size=20, color=GREY_B)
             verdict_group = VGroup(verdict_text, reason_text).arrange(
                 DOWN, buff=0.12)
             verdict_group.move_to(verdict_pos)
+            boxes.append(verdict_group)
             self.play(FadeIn(verdict_group, shift=UP * 0.2))
-            self.wait(1.6)
+            self.wait(1.8)
 
-            fade_list = [c_box, verdict_group]
-            if l_box is not None:
-                fade_list.append(l_box)
-            self.play(*[FadeOut(m) for m in fade_list])
+            self.play(*[FadeOut(m) for m in boxes])
 
         # copy row 0: alice, B1, 1 -- loan row 0 matches AND is open
-        run_case(0, 0, "FALSE",
-                 "loan #1: same owner/book/copy, and returned is NULL")
+        run_case(0, True, "FALSE",
+                 "loan #1: same owner/book/copy, and returned is NULL",
+                 match_loan_idx=0)
 
-        # copy row 1: alice, B2, 1 -- loan row 1 matches but is closed
-        run_case(1, None, "TRUE",
-                 "loan #2 matches owner/book/copy, but it's already returned")
+        # copy row 1: alice, B2, 1 -- loan row 1 matches but is closed,
+        # so it's excluded by "AND l.returned ISNULL" -- 0 rows survive
+        run_case(1, False, "TRUE",
+                 "loan #2 matches owner/book/copy, but returned isn't NULL — excluded",
+                 reject_loan_idx=1)
 
-        # copy row 2: bob, B1, 1 -- no loan row has owner = bob at all
-        run_case(2, None, "TRUE",
-                 "no loan row has owner = bob at all")
+        # copy row 2: bob, B1, 1 -- no loan row has owner = bob at all,
+        # so there's nothing even to check -- 0 rows
+        run_case(2, False, "TRUE",
+                 "no loan row has owner = bob at all — nothing to check")
 
         self.clear_scene()
 

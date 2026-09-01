@@ -241,7 +241,7 @@ We first want to design an entity-relationship schema that most correctly and mo
 
 % ---- Right column: contain -- wine ----
 \node[errel] (contain) at (10.4,-3.4) {contain};
-\node[erentity] (wine) at (10.4,-6.8) {wine};
+\node[erentity, minimum width=5.2cm] (wine) at (10.4,-6.8) {wine};
 
 % ---- Left column: tasted -- member ----
 \node[errel] (tasted) at (5.0,-3.4) {tasted};
@@ -292,7 +292,7 @@ We first want to design an entity-relationship schema that most correctly and mo
 \node[erlabel, above=1mm of num-dot] {Number};
 
 % Number is scoped by wine (weak entity): route down to wine's corner
-\draw[erwire] (num-dot.east) -- ++(1.1,0) |- ($(wine.north)+(0.65,0)$);
+\draw[erwire] (num-dot.east) -- ++(1.1,0) |- (wine.north);
 
 % ---- wine attributes: Others, W.Name / Appellation / Vintage (composite) ----
 \coordinate (others-attr) at ($(wine.north)+(-1.3,0.9)$);

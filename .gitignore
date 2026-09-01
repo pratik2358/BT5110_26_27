@@ -18,5 +18,11 @@
 # website serves lives in docs/slides/, committed on purpose.
 /tut_*.pdf
 
+# Manim build artifacts and rendered output -- the published copy that
+# the website serves lives in docs/videos/, committed on purpose.
+videos/*/media/
+videos/*/__pycache__/
+videos/*/*.mp4
+
 # macOS
 .DS_Store

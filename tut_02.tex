@@ -286,13 +286,17 @@ We first want to design an entity-relationship schema that most correctly and mo
 \node[erhollow] (cellar-dot) at (cellar-attr) {};
 \node[erlabel, above=1mm of cellar-dot] {in\_cellar};
 
+\coordinate (num-junction) at ($(bottle.north)+(0.7,0.6)$);
 \coordinate (num-attr) at ($(bottle.north)+(0.7,0.9)$);
-\draw[erwire] ($(bottle.north)+(0.7,0)$) -- (num-attr);
-\node[erfilled] (num-dot) at (num-attr) {};
-\node[erlabel, above=1mm of num-dot] {Number};
+\draw[erwire] ($(bottle.north)+(0.7,0)$) -- (num-junction);
+\node[erfilled] (num-dot) at (num-junction) {};
+\draw[erwire] (num-junction) -- (num-attr);
+\node[erhollow] (num-leaf) at (num-attr) {};
+\node[erlabel, above=1mm of num-leaf] {Number};
 
 % Number is scoped by wine (weak entity): route down to wine's corner
 \draw[erwire] (num-dot.east) -- ++(1.1,0) |- (wine.north);
+\node[erfilled] at (wine.north) {};
 
 % ---- wine attributes: Others, W.Name / Appellation / Vintage (composite) ----
 \coordinate (others-attr) at ($(wine.north)+(-1.3,0.9)$);

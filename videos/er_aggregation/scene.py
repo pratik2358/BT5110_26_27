@@ -432,10 +432,17 @@ class S06_FullDiagram(WatermarkedScene):
         diagram = VGroup(session, opened, bottle, contain, wine, tasted,
                           member)
 
+        # Aggregate box floats around "opened" alone -- not touching it --
+        # session/bottle's wires cross into it to reach the diamond, but
+        # tasted (the relationship built on top of the aggregate) connects
+        # to the box itself, not to the diamond inside it.
+        agg_box = SurroundingRectangle(opened, color=HL, buff=0.3,
+                                        corner_radius=0.08, stroke_width=2.5)
+
         lines = VGroup(
             hline(session, opened), hline(opened, bottle),
             vline(bottle, contain), vline(contain, wine),
-            vline(opened, tasted), vline(tasted, member),
+            vline(agg_box, tasted), vline(tasted, member),
         )
 
         self.play(FadeIn(session), FadeIn(bottle), FadeIn(wine),
@@ -444,10 +451,6 @@ class S06_FullDiagram(WatermarkedScene):
         self.play(Create(lines[2]), Create(lines[3]), FadeIn(contain))
         self.wait(0.5)
 
-        # Aggregate box floats around "opened" alone -- not touching it --
-        # session/bottle's wires cross into it to reach the diamond.
-        agg_box = SurroundingRectangle(opened, color=HL, buff=0.3,
-                                        corner_radius=0.08, stroke_width=2.5)
         self.play(Create(agg_box))
         self.wait(0.4)
 

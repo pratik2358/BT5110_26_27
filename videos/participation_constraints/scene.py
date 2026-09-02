@@ -102,6 +102,27 @@ def card_label(text, mobj, direction=UP, buff=0.1, font_size=20,
     return t
 
 
+def mini_aggregate(label="opened", width=1.3, height=0.6, font_size=16,
+                    box_pad=0.22):
+    """The aggregate: a relationship diamond wrapped in a box that other
+    relationships attach to (not the diamond itself)."""
+    diamond = rel_diamond(label, width=width, height=height,
+                           font_size=font_size)
+    box = SurroundingRectangle(diamond, color=WHITE, buff=box_pad,
+                                corner_radius=0.06, stroke_width=2)
+    group = VGroup(box, diamond)
+    group.box = box
+    group.diamond = diamond
+    return group
+
+
+def wine_footnote():
+    return Text(
+        "wᵢ = the i-th wine, i.e. the combination (wine name, Appellation, Vintage)",
+        font_size=16, color=GREY_C,
+    )
+
+
 # ---------------------------------------------------------------------------
 # Scene 1 -- Title
 # ---------------------------------------------------------------------------
@@ -215,10 +236,10 @@ class S03_OneOne(WatermarkedScene):
 
         bottle_cols = ["wine", "number"]
         bottle_rows = [
-            ["Rumbalara", "1"],
-            ["Rumbalara", "2"],
-            ["Cuvée Noir", "1"],
-            ["Cuvée Noir", "2"],
+            ["w1", "1"],
+            ["w1", "2"],
+            ["w2", "1"],
+            ["w2", "2"],
         ]
         table = data_table(bottle_rows, bottle_cols, scale=0.55, name="bottle")
         table.next_to(row, DOWN, buff=0.55)
@@ -236,7 +257,10 @@ class S03_OneOne(WatermarkedScene):
         )
         note.next_to(table, DOWN, buff=0.4)
         self.play(FadeIn(note, shift=UP * 0.2))
-        self.wait(2)
+        foot = wine_footnote()
+        foot.next_to(note, DOWN, buff=0.25)
+        self.play(FadeIn(foot))
+        self.wait(1.8)
 
         self.clear_scene()
 
@@ -267,16 +291,16 @@ class S04_ZeroOne(WatermarkedScene):
 
         bottle_cols = ["wine", "number"]
         bottle_rows = [
-            ["Rumbalara", "1"],
-            ["Rumbalara", "2"],
-            ["Cuvée Noir", "1"],
-            ["Cuvée Noir", "2"],
+            ["w1", "1"],
+            ["w1", "2"],
+            ["w2", "1"],
+            ["w2", "2"],
         ]
         open_cols = ["wine", "number", "session"]
         open_rows = [
-            ["Rumbalara", "1", "S1"],
-            ["Rumbalara", "2", "S1"],
-            ["Cuvée Noir", "1", "S2"],
+            ["w1", "1", "S1"],
+            ["w1", "2", "S1"],
+            ["w2", "1", "S2"],
         ]
         bt = data_table(bottle_rows, bottle_cols, scale=0.48, name="bottle")
         ot = data_table(open_rows, open_cols, scale=0.48, name="open")
@@ -296,7 +320,7 @@ class S04_ZeroOne(WatermarkedScene):
         self.wait(0.4)
 
         note = Text(
-            "Cuvée Noir #2 never shows up in open — still in the cellar",
+            "w2 #2 never shows up in open — still in the cellar",
             font_size=21, color=BAD,
         )
         note2 = Text(
@@ -306,7 +330,10 @@ class S04_ZeroOne(WatermarkedScene):
         notes = VGroup(note, note2).arrange(DOWN, buff=0.15)
         notes.next_to(both, DOWN, buff=0.4)
         self.play(FadeIn(notes, shift=UP * 0.2))
-        self.wait(2.2)
+        foot = wine_footnote()
+        foot.next_to(notes, DOWN, buff=0.25)
+        self.play(FadeIn(foot))
+        self.wait(2)
 
         self.clear_scene()
 
@@ -322,13 +349,13 @@ class S05_OneN(WatermarkedScene):
         heading.to_edge(UP)
         self.play(FadeIn(heading, shift=UP * 0.2))
 
-        opened = rel_diamond("opened bottle", width=2.2, height=0.85,
-                              font_size=17)
+        opened = mini_aggregate("opened", width=1.5, height=0.65,
+                                 font_size=16)
         tasted = rel_diamond("tasted", width=1.6, height=0.8, font_size=18)
         member = entity_box("member", width=1.9, height=0.72, font_size=20,
                              fill=MEMBER_FILL)
-        row = VGroup(opened, tasted, member).arrange(RIGHT, buff=0.7)
-        row.next_to(heading, DOWN, buff=0.45)
+        row = VGroup(opened, tasted, member).arrange(RIGHT, buff=0.6)
+        row.next_to(heading, DOWN, buff=0.3)
         l1 = hline(opened, tasted)
         l2 = hline(tasted, member)
         self.play(FadeIn(row), Create(l1), Create(l2))
@@ -339,13 +366,13 @@ class S05_OneN(WatermarkedScene):
 
         taste_cols = ["member", "wine", "number", "rating"]
         taste_rows = [
-            ["Alice", "Rumbalara", "1", "Good"],
-            ["Bob", "Rumbalara", "1", "Very Good"],
-            ["Alice", "Rumbalara", "2", "Average"],
-            ["Carol", "Cuvée Noir", "1", "Good"],
+            ["Alice", "w1", "1", "Good"],
+            ["Bob", "w1", "1", "Very Good"],
+            ["Alice", "w1", "2", "Average"],
+            ["Carol", "w2", "1", "Good"],
         ]
-        table = data_table(taste_rows, taste_cols, scale=0.5, name="taste")
-        table.next_to(row, DOWN, buff=0.55)
+        table = data_table(taste_rows, taste_cols, scale=0.46, name="taste")
+        table.next_to(row, DOWN, buff=0.4)
         self.play(Create(table))
         self.wait(0.5)
 
@@ -358,13 +385,16 @@ class S05_OneN(WatermarkedScene):
         self.wait(0.4)
 
         note = Text(
-            "Every opened bottle — Rumbalara #1, #2, Cuvée Noir #1 — appears\n"
-            "at least once here. Rumbalara #1 was tasted by two members.",
-            font_size=21, color=GOOD, line_spacing=1.3,
+            "Every opened bottle — w1 #1, w1 #2, w2 #1 — appears at least\n"
+            "once here. w1 #1 was tasted by two members.",
+            font_size=19, color=GOOD, line_spacing=1.3,
         )
-        note.next_to(table, DOWN, buff=0.4)
+        note.next_to(table, DOWN, buff=0.3)
         self.play(FadeIn(note, shift=UP * 0.2))
-        self.wait(2.4)
+        foot = wine_footnote()
+        foot.next_to(note, DOWN, buff=0.18)
+        self.play(FadeIn(foot))
+        self.wait(2)
 
         self.clear_scene()
 
@@ -383,10 +413,10 @@ class S06_ZeroN(WatermarkedScene):
         member = entity_box("member", width=1.9, height=0.72, font_size=20,
                              fill=MEMBER_FILL)
         tasted = rel_diamond("tasted", width=1.6, height=0.8, font_size=18)
-        opened = rel_diamond("opened bottle", width=2.2, height=0.85,
-                              font_size=17)
-        row = VGroup(member, tasted, opened).arrange(RIGHT, buff=0.7)
-        row.next_to(heading, DOWN, buff=0.45)
+        opened = mini_aggregate("opened", width=1.5, height=0.65,
+                                 font_size=16)
+        row = VGroup(member, tasted, opened).arrange(RIGHT, buff=0.6)
+        row.next_to(heading, DOWN, buff=0.3)
         l1 = hline(member, tasted)
         l2 = hline(tasted, opened)
         self.play(FadeIn(row), Create(l1), Create(l2))
@@ -399,15 +429,15 @@ class S06_ZeroN(WatermarkedScene):
         member_rows = [["Alice"], ["Bob"], ["Carol"], ["Dave"]]
         taste_cols = ["member", "wine", "number"]
         taste_rows = [
-            ["Alice", "Rumbalara", "1"],
-            ["Bob", "Rumbalara", "1"],
-            ["Alice", "Rumbalara", "2"],
-            ["Carol", "Cuvée Noir", "1"],
+            ["Alice", "w1", "1"],
+            ["Bob", "w1", "1"],
+            ["Alice", "w1", "2"],
+            ["Carol", "w2", "1"],
         ]
-        mt = data_table(member_rows, member_cols, scale=0.5, name="member")
-        tt = data_table(taste_rows, taste_cols, scale=0.5, name="taste")
+        mt = data_table(member_rows, member_cols, scale=0.46, name="member")
+        tt = data_table(taste_rows, taste_cols, scale=0.46, name="taste")
         both = VGroup(mt, tt).arrange(RIGHT, buff=1.0, aligned_edge=UP)
-        both.next_to(row, DOWN, buff=0.5)
+        both.next_to(row, DOWN, buff=0.4)
         self.play(Create(mt), Create(tt))
         self.wait(0.5)
 
@@ -421,16 +451,19 @@ class S06_ZeroN(WatermarkedScene):
 
         note = Text(
             "Dave hasn't tasted anything yet — zero rows in taste",
-            font_size=21, color=BAD,
+            font_size=19, color=BAD,
         )
         note2 = Text(
             "Alice shows up twice — both are valid participation counts",
-            font_size=21, color=GOOD,
+            font_size=19, color=GOOD,
         )
-        notes = VGroup(note, note2).arrange(DOWN, buff=0.15)
-        notes.next_to(both, DOWN, buff=0.4)
+        notes = VGroup(note, note2).arrange(DOWN, buff=0.12)
+        notes.next_to(both, DOWN, buff=0.3)
         self.play(FadeIn(notes, shift=UP * 0.2))
-        self.wait(2.4)
+        foot = wine_footnote()
+        foot.next_to(notes, DOWN, buff=0.18)
+        self.play(FadeIn(foot))
+        self.wait(2)
 
         self.clear_scene()
 

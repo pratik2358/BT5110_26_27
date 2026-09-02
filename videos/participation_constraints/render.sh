@@ -56,7 +56,7 @@ mkdir -p "$SITE_DIR/thumbs"
 cp "$FINAL" "$SITE_DIR/tut_02_participation_constraints.mp4"
 
 # Grab a thumbnail from the synthesis scene (the full diagram).
-ffmpeg -y -ss 00:01:13 -i "$FINAL" -frames:v 1 -vf "scale=480:-1" \
+ffmpeg -y -ss 00:01:16 -i "$FINAL" -frames:v 1 -vf "scale=480:-1" \
   "$SITE_DIR/thumbs/tut_02_participation_constraints.png"
 
 echo "Copied video + thumbnail into $SITE_DIR"
